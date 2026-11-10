@@ -21,5 +21,7 @@ export type CatalogExercise = {
   tips: string[];
   /** File names under assets/catalog/media; first is the start pose, second (if any) the peak. */
   media: string[];
-  sources: ('repdb' | 'fedb')[];
+  sources: ('repdb' | 'fedb' | 'custom')[];
+  /** Custom exercises only: a photo the user picked, copied into the app's files. */
+  photoUri?: string | null;
 };

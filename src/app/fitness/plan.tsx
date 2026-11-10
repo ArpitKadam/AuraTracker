@@ -2,22 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATALOG, MEDIA } from '@/assets/catalog';
 import type { CatalogExercise, MuscleGroup, MuscleSlug } from '@/fitness/catalog-types';
 import { lastTopSets, listPastSessions, type TopSet } from '@/fitness/db/history';
 import { getProfile, type Profile } from '@/fitness/db/profile';
 import { finishSession, getActiveSession, setCounts } from '@/fitness/db/session';
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { recommend, swapFor, type GroupPicks } from '@/fitness/recommend';
+import { exerciseImage, loadExercises } from '@/fitness/exercises';
 import { BodyMap } from '@/fitness/ui/BodyMap';
 import { formatWeight } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
-const BY_ID = new Map(CATALOG.map((e) => [e.id, e]));
 const isGroup = (g: string): g is MuscleGroup => GROUPS.some((x) => x.id === g);
 
 export default function Plan() {
@@ -30,6 +29,10 @@ export default function Plan() {
   const [tops, setTops] = useState<Map<string, TopSet>>(new Map());
   const [active, setActive] = useState<number | null>(null);
   const [counts, setCountsState] = useState<Map<string, number>>(new Map());
+  const [exercises, setExercises] = useState<{ all: CatalogExercise[]; byId: Map<string, CatalogExercise> }>({ all: [], byId: new Map() });
+  // Recommendations are rebuilt only when the exercise list changes (a custom exercise was added or edited),
+  // not on every return from logging, so swaps stay put.
+  const builtFor = useRef<string | null>(null);
 
   // Set counts change while the user logs on the exercise screen; refresh on every return.
   useFocusEffect(
@@ -42,32 +45,31 @@ export default function Plan() {
           setCountsState(c);
         }
       });
+      (async () => {
+        const ex = await loadExercises(db);
+        const signature = `${groups.join(',')}|${ex.all.filter((e) => e.sources[0] === 'custom').map((e) => `${e.id}:${e.name}:${e.groups}:${e.equipment}`).join(';')}`;
+        if (!live) return;
+        setExercises(ex);
+        if (builtFor.current === signature) return;
+        const [p, history] = await Promise.all([getProfile(db), listPastSessions(db)]);
+        const recs = recommend(groups, ex.all, history, p);
+        const t = await lastTopSets(db, recs.flatMap((r) => r.picks.map((x) => x.exerciseId)));
+        if (!live) return;
+        builtFor.current = signature;
+        setProfile(p);
+        setSections(recs);
+        setTops(t);
+      })();
       return () => {
         live = false;
       };
-    }, [db]),
+    }, [db, groups]),
   );
-
-  useEffect(() => {
-    let live = true;
-    (async () => {
-      const [p, history] = await Promise.all([getProfile(db), listPastSessions(db)]);
-      const recs = recommend(groups, CATALOG, history, p);
-      const t = await lastTopSets(db, recs.flatMap((r) => r.picks.map((x) => x.exerciseId)));
-      if (!live) return;
-      setProfile(p);
-      setSections(recs);
-      setTops(t);
-    })();
-    return () => {
-      live = false;
-    };
-  }, [db, groups]);
 
   const swap = (group: MuscleGroup, index: number) => {
     if (!profile) return;
     const shown = new Set(sections.flatMap((s) => s.picks.map((p) => p.exerciseId)));
-    const next = swapFor(sections.find((s) => s.group === group)!.picks[index].exerciseId, group, shown, CATALOG, profile);
+    const next = swapFor(sections.find((s) => s.group === group)!.picks[index].exerciseId, group, shown, exercises.all, profile);
     if (!next) return;
     setSections((all) =>
       all.map((s) => (s.group !== group ? s : { ...s, picks: s.picks.map((p, i) => (i === index ? { exerciseId: next, reason: 'catalog' } : p)) })),
@@ -80,9 +82,9 @@ export default function Plan() {
     const count = new Map<MuscleSlug, number>();
     for (const s of sections)
       for (const p of s.picks)
-        for (const m of BY_ID.get(p.exerciseId)?.secondary ?? []) if (!primary.includes(m)) count.set(m, (count.get(m) ?? 0) + 1);
+        for (const m of exercises.byId.get(p.exerciseId)?.secondary ?? []) if (!primary.includes(m)) count.set(m, (count.get(m) ?? 0) + 1);
     return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([m]) => m);
-  }, [sections, primary]);
+  }, [sections, primary, exercises]);
   const loggedTotal = [...counts.values()].reduce((a, b) => a + b, 0);
   const finish = async () => {
     if (active === null) return;
@@ -132,7 +134,7 @@ export default function Plan() {
                   <Text style={styles.sectionCount}>{s.picks.length ? `${s.picks.length} picks` : 'Nothing matches your equipment'}</Text>
                 </View>
                 {s.picks.map((p, i) => {
-                  const e = BY_ID.get(p.exerciseId);
+                  const e = exercises.byId.get(p.exerciseId);
                   return e ? (
                     <ExerciseRow
                       key={p.exerciseId}
@@ -146,6 +148,14 @@ export default function Plan() {
                     />
                   ) : null;
                 })}
+                <Pressable
+                  onPress={() => router.push({ pathname: '/fitness/custom', params: { group: s.group } })}
+                  style={styles.addOwn}
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="add" size={18} color={colors.textMuted} />
+                  <Text style={styles.addOwnText}>{`Add your own ${groupLabel(s.group).toLowerCase()} exercise`}</Text>
+                </Pressable>
               </View>
             ))
           : null}
@@ -179,7 +189,13 @@ function ExerciseRow({
 }) {
   return (
     <Pressable onPress={onOpen} style={({ pressed }) => [styles.row, logged > 0 && styles.rowDone, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={`Log ${exercise.name}`}>
-      <Image source={MEDIA[exercise.media[0]]} style={styles.thumb} contentFit="cover" />
+      {exerciseImage(exercise) ? (
+        <Image source={exerciseImage(exercise)} style={styles.thumb} contentFit="cover" />
+      ) : (
+        <View style={[styles.thumb, styles.thumbEmpty]}>
+          <Ionicons name="barbell-outline" size={24} color={colors.textFaint} />
+        </View>
+      )}
       <View style={styles.flex}>
         <Text style={styles.name} numberOfLines={2}>
           {exercise.name}
@@ -229,6 +245,19 @@ const styles = StyleSheet.create({
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: space.sm },
   sectionTitle: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
   sectionCount: { fontFamily: fonts.regular, fontSize: 13, color: colors.textFaint },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  addOwn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.xs,
+    paddingVertical: space.md,
+    paddingHorizontal: space.md,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: colors.line,
+  },
+  addOwnText: { fontFamily: fonts.medium, fontSize: 14, color: colors.textMuted },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

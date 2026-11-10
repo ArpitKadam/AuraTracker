@@ -1,20 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Storage } from 'expo-sqlite/kv-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATALOG, MEDIA } from '@/assets/catalog';
-import type { MuscleGroup } from '@/fitness/catalog-types';
+import type { CatalogExercise, MuscleGroup } from '@/fitness/catalog-types';
 import { exerciseSessions } from '@/fitness/db/history';
 import { getProfile, toKg, type Profile } from '@/fitness/db/profile';
 import { addSet, deleteSet, getActiveSession, lastSessionSets, setsFor, startSession, type LoggedSet } from '@/fitness/db/session';
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { overloadHint, prefill, type Hint } from '@/fitness/overload';
 import { series, type Metric, type SessionSets } from '@/fitness/progress';
+import { exerciseImage, loadExercises } from '@/fitness/exercises';
 import { ProgressChart } from '@/fitness/ui/ProgressChart';
 import { displayStep, formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -45,7 +45,13 @@ export default function ExerciseLog() {
   const insets = useSafeAreaInsets();
   const db = useSQLiteContext();
   const params = useLocalSearchParams<{ id: string; groups?: string }>();
-  const exercise = useMemo(() => CATALOG.find((e) => e.id === params.id), [params.id]);
+  // undefined = loading, null = not found. Reloaded on focus so edits to a custom exercise show on return.
+  const [exercise, setExercise] = useState<CatalogExercise | null | undefined>(undefined);
+  useFocusEffect(
+    useCallback(() => {
+      loadExercises(db).then(({ byId }) => setExercise(byId.get(params.id) ?? null));
+    }, [db, params.id]),
+  );
   const groups = useMemo(() => (params.groups ?? '').split(',').filter(isGroup), [params.groups]);
 
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -110,7 +116,8 @@ export default function ExerciseLog() {
     return () => clearInterval(timer);
   }, [exercise]);
 
-  if (!exercise) {
+  if (exercise === undefined) return <View style={styles.root} />;
+  if (exercise === null) {
     return (
       <View style={[styles.root, styles.center]}>
         <Text style={styles.title}>Exercise not found</Text>
@@ -159,15 +166,27 @@ export default function ExerciseLog() {
           <Text style={styles.title} numberOfLines={2}>
             {exercise.name}
           </Text>
+          {exercise.sources[0] === 'custom' ? (
+            <Pressable
+              onPress={() => router.push({ pathname: '/fitness/custom', params: { id: exercise.id } })}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Edit exercise"
+            >
+              <Ionicons name="create-outline" size={22} color={colors.textMuted} />
+            </Pressable>
+          ) : null}
         </View>
 
         <ScrollView contentContainerStyle={{ gap: space.md, paddingBottom: insets.bottom + space.xl }} keyboardShouldPersistTaps="handled">
-          <Image
-            source={MEDIA[exercise.media[Math.min(frame, exercise.media.length - 1)]]}
-            style={styles.media}
-            contentFit="contain"
-            accessibilityLabel={`${exercise.name} demonstration`}
-          />
+          {exerciseImage(exercise, frame) ? (
+            <Image
+              source={exerciseImage(exercise, frame)}
+              style={styles.media}
+              contentFit={exercise.photoUri ? 'cover' : 'contain'}
+              accessibilityLabel={`${exercise.name} demonstration`}
+            />
+          ) : null}
           <View style={styles.tags}>
             {exercise.groups.map((g) => (
               <View key={g} style={styles.tag}>

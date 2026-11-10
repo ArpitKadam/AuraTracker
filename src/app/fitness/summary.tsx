@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CATALOG } from '@/assets/catalog';
 import { getProfile, type Profile } from '@/fitness/db/profile';
+import { loadExercises } from '@/fitness/exercises';
 import { bestBefore, getSession, type SessionDetail } from '@/fitness/db/session';
 import { groupLabel, slugsFor } from '@/fitness/groups';
 import { overloadHint, type Hint } from '@/fitness/overload';
@@ -15,7 +15,6 @@ import { BodyMap } from '@/fitness/ui/BodyMap';
 import { formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
-const NAME = new Map(CATALOG.map((e) => [e.id, e.name]));
 
 type Pr = { exerciseId: string; today: { weightKg: number; reps: number }; before: { weightKg: number; reps: number } };
 
@@ -26,10 +25,12 @@ export default function Summary() {
   const [detail, setDetail] = useState<SessionDetail | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [prs, setPrs] = useState<Pr[]>([]);
+  const [names, setNames] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     (async () => {
-      const [d, p] = await Promise.all([getSession(db, Number(session)), getProfile(db)]);
+      const [d, p, ex] = await Promise.all([getSession(db, Number(session)), getProfile(db), loadExercises(db)]);
+      setNames(new Map(ex.all.map((e) => [e.id, e.name])));
       if (!d) return;
       const found: Pr[] = [];
       for (const e of d.exercises) {
@@ -80,7 +81,7 @@ export default function Summary() {
             </View>
             <View style={styles.flex}>
               <Text style={styles.prLabel}>New top set</Text>
-              <Text style={styles.prName}>{`${NAME.get(pr.exerciseId) ?? pr.exerciseId} ${formatWeight(pr.today.weightKg, profile.units)} × ${pr.today.reps}`}</Text>
+              <Text style={styles.prName}>{`${names.get(pr.exerciseId) ?? pr.exerciseId} ${formatWeight(pr.today.weightKg, profile.units)} × ${pr.today.reps}`}</Text>
               <Text style={styles.muted}>{`Up from ${formatWeight(pr.before.weightKg, profile.units)} × ${pr.before.reps}`}</Text>
             </View>
           </View>
@@ -93,7 +94,7 @@ export default function Summary() {
               {next.map((n, i) => (
                 <View key={n.exerciseId} style={[styles.nextRow, i > 0 && styles.divider]}>
                   <View style={styles.flex}>
-                    <Text style={styles.nextName}>{NAME.get(n.exerciseId) ?? n.exerciseId}</Text>
+                    <Text style={styles.nextName}>{names.get(n.exerciseId) ?? n.exerciseId}</Text>
                     <Text style={styles.faint}>
                       {n.hint.kind === 'weight' ? `${profile.repMin}+ reps on every set` : n.hint.kind === 'reps' ? `Best today ${n.hint.lastReps} reps` : ''}
                     </Text>
