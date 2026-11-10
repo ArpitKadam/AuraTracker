@@ -19,8 +19,9 @@ src/theme/           tokens.ts (dark palette, fonts, printColors), Background, G
 src/fitness/split.ts default weekly split (editable in Task 10a)
 src/recipe-module/   MyBites domain code (unchanged except theming)
 src/fitness/         Fitness domain: db, catalog loader, rules (overload, ranking), export
-assets/catalog/      generated catalog.json + exercise media (build output)
-scripts/build-catalog  merges ExerciseDB + RepDB + free-exercise-db
+assets/catalog/      GENERATED, gitignored: catalog.json, media/*.webp, index.ts (CATALOG + static require map)
+scripts/build_catalog.py  RepDB (primary) + free-exercise-db -> assets/catalog; self-checks with asserts
+data/raw/            gitignored dataset clones (RepDB licence forbids redistributing the dataset)
 modules/reel-fetcher MyBites native module (unchanged)
 ```
 
@@ -56,7 +57,10 @@ Source of truth: Figma https://www.figma.com/design/0gzT4kJHYZcWtOA2ayEfL3 (vari
 ## Why
 
 - Fork, not sync: MyBites won't ship standalone; one codebase is cheaper.
-- Bundled catalog: works offline in the gym; costs about 100MB of APK.
+- Bundled catalog: works offline in the gym. 1,417 exercises, 2,948 WebP images at 320px, about 17 MB.
+- Catalog is built locally, never committed: the repo is public and RepDB's free tier forbids redistributing the dataset. A fresh clone must run `scripts/build_catalog.py` before `tsc` or Metro (the app imports `@/assets/catalog`).
+- ExerciseDB is not in the catalog: the Kaggle "open source" set is a 30-exercise sample behind a Kaggle login, and the 1,500-exercise repo it links to is AGPL with no data.
+- Equipment comes from the icons on RepDB's exercise pages (name heuristics only as fallback). Near-duplicates are collapsed by a normalised name key ("barbell" and "medium grip" are implied).
 - Separate DBs: no schema coupling between the two apps.
 
 ## Build (Windows)

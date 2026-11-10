@@ -58,3 +58,7 @@ reference/
 modules/*/android/build/
 modules/*/android/.gradle/
 modules/*/android/.cxx/
+
+# exercise datasets: downloaded + generated locally by scripts/build_catalog.py (RepDB licence: no redistribution)
+data/raw/
+assets/catalog/

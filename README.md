@@ -4,8 +4,13 @@ Android app with two experiences behind one launcher: **Fitness** (workout loggi
 
 ```bash
 npm ci
+git clone --depth 1 https://github.com/RepDB/exercise-dataset.git data/raw/repdb
+git clone --depth 1 https://github.com/yuhonas/free-exercise-db.git data/raw/fedb
+python -I scripts/build_catalog.py   # needs Pillow; writes assets/catalog (gitignored)
 npx expo run:android   # dev build on a connected device
 npx tsc --noEmit && npx expo lint
 ```
 
 Backlog: `TASK.md`. Structure: `ARCHITECTURE.md`.
+
+Exercise data by [RepDB](https://repdb.co). Additional exercises and photos from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense).
