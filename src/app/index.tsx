@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { groupFromName, slugsFor } from '@/fitness/groups';
 import { planFor } from '@/fitness/split';
+import { BodyMap } from '@/fitness/ui/BodyMap';
 import { getRemember, openApp, setRemember, startupTarget } from '@/launcher';
 import { toISODate } from '@/recipe-module/lib/dates';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -57,6 +59,15 @@ export default function Launcher() {
           <Ionicons name="barbell-outline" size={16} color={colors.onAccent} />
           <Text style={styles.tagText}>Fitness</Text>
         </View>
+        {plan ? (
+          <View style={styles.map} pointerEvents="none">
+            <BodyMap
+              primary={slugsFor(plan.primary.map(groupFromName).filter((g) => g !== null))}
+              secondary={slugsFor(plan.secondary.map(groupFromName).filter((g) => g !== null))}
+              scale={0.42}
+            />
+          </View>
+        ) : null}
         <View>
           <Text style={styles.label}>{plan ? "Today's plan" : 'Sunday'}</Text>
           <Text style={styles.plan}>{plan ? plan.primary.join(' + ') : 'Rest or make-up day'}</Text>
@@ -120,6 +131,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+  map: { position: 'absolute', right: 8, top: 16, opacity: 0.95 },
   tagText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.onAccent },
   label: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
   plan: { fontFamily: fonts.display, fontSize: 44, lineHeight: 46, color: colors.text },

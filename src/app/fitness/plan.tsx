@@ -58,11 +58,15 @@ export default function Plan() {
     );
   };
 
+  const primary = useMemo(() => GROUPS.filter((g) => groups.includes(g.id)).flatMap((g) => g.slugs), [groups]);
+  // The 3 assisting muscles the picks hit most often.
   const secondary = useMemo(() => {
-    const ids = sections.flatMap((s) => s.picks.map((p) => p.exerciseId));
-    return [...new Set(ids.flatMap((id) => BY_ID.get(id)?.secondary ?? []))] as MuscleSlug[];
-  }, [sections]);
-  const primary = GROUPS.filter((g) => groups.includes(g.id)).flatMap((g) => g.slugs);
+    const count = new Map<MuscleSlug, number>();
+    for (const s of sections)
+      for (const p of s.picks)
+        for (const m of BY_ID.get(p.exerciseId)?.secondary ?? []) if (!primary.includes(m)) count.set(m, (count.get(m) ?? 0) + 1);
+    return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([m]) => m);
+  }, [sections, primary]);
   const total = sections.reduce((n, s) => n + s.picks.length, 0);
   const staples = sections.reduce((n, s) => n + s.picks.filter((p) => p.reason === 'staple').length, 0);
 
@@ -90,7 +94,7 @@ export default function Plan() {
               <>
                 <Text style={styles.stripLabel}>Assisting</Text>
                 <Text style={styles.stripMuted} numberOfLines={2}>
-                  {secondary.filter((s) => !primary.includes(s)).join(', ').replace(/-/g, ' ')}
+                  {secondary.join(', ').replace(/-/g, ' ')}
                 </Text>
               </>
             ) : null}

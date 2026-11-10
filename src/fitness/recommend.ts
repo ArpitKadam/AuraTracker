@@ -1,6 +1,9 @@
 // Rule-based exercise recommendations (TASK.md "Recommendations"). Pure: no DB, no clock.
 import type { CatalogExercise, Equipment, MuscleGroup } from './catalog-types.ts';
 import type { EquipmentAccess, Experience } from './db/profile.ts';
+import { GROUPS } from './groups.ts';
+
+const GROUP_SLUGS = Object.fromEntries(GROUPS.map((g) => [g.id, g.slugs as string[]])) as Record<MuscleGroup, string[]>;
 
 export type PastSession = { startedAt: number; groups: MuscleGroup[]; exerciseIds: string[] };
 
@@ -27,9 +30,23 @@ const LEVELS: Record<Experience, (string | null)[]> = {
 
 export type Prefs = { equipment: EquipmentAccess; experience: Experience };
 
-/** Catalog exercises the user can do for this group, compound first, then most-illustrated, then name. */
+// Free weights first, novelty kit (BOSU, sandbag, rings...) last.
+const EQUIPMENT_RANK: Record<Equipment, number> = {
+  barbell: 0, dumbbell: 1, cable: 2, machine: 3, 'ez-bar': 4, bodyweight: 5, kettlebell: 6, band: 7, other: 8,
+};
+
+// Small muscles are mostly trained with isolation work (pushdowns, curls, crunches); big ones with compounds.
+const ISOLATION_FIRST = new Set<MuscleGroup>(['biceps', 'triceps', 'forearms', 'abs']);
+
+/**
+ * Catalog exercises the user can do for this group: main target first (primary[0] is in the group),
+ * then the group's lead mechanic (compound for big groups, isolation for arms and abs), then RepDB's
+ * curated set before free-exercise-db, then common equipment, then most-illustrated, then name.
+ */
 export function candidates(catalog: CatalogExercise[], group: MuscleGroup, prefs: Prefs): CatalogExercise[] {
   const eq = ALLOWED[prefs.equipment];
+  const targets = (e: CatalogExercise) => GROUP_SLUGS[group].includes(e.primary[0]);
+  const lead = ISOLATION_FIRST.has(group) ? 'isolation' : 'compound';
   return catalog
     .filter(
       (e) =>
@@ -40,7 +57,10 @@ export function candidates(catalog: CatalogExercise[], group: MuscleGroup, prefs
     )
     .sort(
       (a, b) =>
-        Number(b.mechanic === 'compound') - Number(a.mechanic === 'compound') ||
+        Number(targets(b)) - Number(targets(a)) ||
+        Number(b.mechanic === lead) - Number(a.mechanic === lead) ||
+        Number(b.sources[0] === 'repdb') - Number(a.sources[0] === 'repdb') ||
+        EQUIPMENT_RANK[a.equipment] - EQUIPMENT_RANK[b.equipment] ||
         b.media.length - a.media.length ||
         a.name.localeCompare(b.name),
     );

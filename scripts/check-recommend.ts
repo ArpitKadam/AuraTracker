@@ -36,6 +36,8 @@ const catalog = [
   ex('svend', { mechanic: 'isolation', equipment: 'other' }),
   ex('pushdown', { groups: ['triceps'], primary: ['triceps'], equipment: 'cable', mechanic: 'isolation' }),
   ex('skull', { groups: ['triceps'], primary: ['triceps'], equipment: 'ez-bar', mechanic: 'isolation' }),
+  ex('close-grip', { groups: ['triceps'], primary: ['triceps'], equipment: 'barbell', mechanic: 'compound' }),
+  ex('fedb-press', { sources: ['fedb'] }),
 ];
 const gym = { equipment: 'gym' as const, experience: 'intermediate' as const };
 const s = (day: number, groups: PastSession['groups'], exerciseIds: string[]): PastSession => ({ startedAt: day * 86_400_000, groups, exerciseIds });
@@ -48,7 +50,7 @@ const ids = (g: { picks: { exerciseId: string }[] }) => g.picks.map((p) => p.exe
   assert.ok(chest.picks.every((p) => p.reason === 'catalog'));
   assert.ok(!ids(chest).includes('chest-stretch') && !ids(chest).includes('decline'));
   const firstIso = chest.picks.findIndex((p) => catalog.find((e) => e.id === p.exerciseId)!.mechanic === 'isolation');
-  assert.ok(chest.picks.slice(firstIso).every((p) => catalog.find((e) => e.id === p.exerciseId)!.mechanic === 'isolation'));
+  if (firstIso !== -1) assert.ok(chest.picks.slice(firstIso).every((p) => catalog.find((e) => e.id === p.exerciseId)!.mechanic === 'isolation'));
 }
 
 // Staples (>= 80% of last 5 chest sessions) first, then other history oldest-first, then catalog.
@@ -99,6 +101,20 @@ const ids = (g: { picks: { exerciseId: string }[] }) => g.picks.map((p) => p.exe
   assert.ok(ids(db).every((i) => ['dumbbell', 'bodyweight'].includes(catalog.find((e) => e.id === i)!.equipment)));
   const [bw] = recommend(['chest'], catalog, [], { equipment: 'bodyweight', experience: 'advanced' });
   assert.deepEqual(new Set(ids(bw)), new Set(['pushup', 'dips']));
+}
+
+// Main target first: for triceps, the pushdown (primary triceps) outranks dips (primary chest, also triceps);
+// for chest, barbell outranks bodyweight among equals.
+{
+  const [tri] = recommend(['triceps'], catalog, [], gym);
+  assert.ok(ids(tri).indexOf('pushdown') < ids(tri).indexOf('dips'));
+  const [chest] = recommend(['chest'], catalog, [], gym);
+  assert.ok(ids(chest).indexOf('bench') < ids(chest).indexOf('pushup'));
+  // arms lead with isolation: pushdown and skull crusher before the close-grip press
+  assert.ok(ids(tri).indexOf('skull') < ids(tri).indexOf('close-grip') && ids(tri).indexOf('pushdown') < ids(tri).indexOf('close-grip'));
+  // RepDB before free-exercise-db among otherwise equal picks
+  const pool = recommend(['chest'], catalog, [], gym)[0];
+  assert.ok(!ids(pool).includes('fedb-press') || ids(pool).indexOf('bench') < ids(pool).indexOf('fedb-press'));
 }
 
 // Swap: same group, not already shown, prefers the same primary muscle.
