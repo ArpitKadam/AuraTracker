@@ -9,14 +9,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CATALOG, MEDIA } from '@/assets/catalog';
 import type { MuscleGroup } from '@/fitness/catalog-types';
+import { exerciseSessions } from '@/fitness/db/history';
 import { getProfile, toKg, type Profile } from '@/fitness/db/profile';
 import { addSet, deleteSet, getActiveSession, lastSessionSets, setsFor, startSession, type LoggedSet } from '@/fitness/db/session';
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { overloadHint, prefill, type Hint } from '@/fitness/overload';
+import { series, type Metric, type SessionSets } from '@/fitness/progress';
+import { ProgressChart } from '@/fitness/ui/ProgressChart';
 import { displayStep, formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
 const isGroup = (g: string): g is MuscleGroup => GROUPS.some((x) => x.id === g);
+
+const METRICS: { id: Metric; label: string; title: string }[] = [
+  { id: 'top', label: 'Top set', title: 'Top working set' },
+  { id: 'e1rm', label: 'Est. 1RM', title: 'Estimated 1-rep max' },
+  { id: 'volume', label: 'Volume', title: 'Working volume' },
+];
 
 // Typed-but-unlogged entry survives Android killing the app in the background (e.g. while on YouTube).
 // Only reused while a workout is open and within 6 h, so an old draft never overrides the hint.
@@ -49,6 +58,8 @@ export default function ExerciseLog() {
   const [error, setError] = useState<string | null>(null);
   const [frame, setFrame] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const [history, setHistory] = useState<SessionSets[]>([]);
+  const [metric, setMetric] = useState<Metric>('top');
 
   const reload = useCallback(async () => {
     if (!exercise) return;
@@ -60,12 +71,18 @@ export default function ExerciseLog() {
     if (!exercise) return;
     let live = true;
     (async () => {
-      const [p, base, open] = await Promise.all([getProfile(db), lastSessionSets(db, exercise.id), getActiveSession(db)]);
+      const [p, base, open, past] = await Promise.all([
+        getProfile(db),
+        lastSessionSets(db, exercise.id),
+        getActiveSession(db),
+        exerciseSessions(db, exercise.id),
+      ]);
       const h = overloadHint(base, { repMin: p.repMin, weightStepKg: p.weightStep });
       const start = prefill(h);
       if (!live) return;
       setProfile(p);
       setHint(h);
+      setHistory(past);
       const draft = open ? readDraft(exercise.id, Date.now()) : null;
       setWeight(draft?.weight ?? (start.weightKg === null ? '' : String(toDisplay(start.weightKg, p.units))));
       setReps(draft?.reps ?? String(start.reps ?? p.repMin));
@@ -217,6 +234,37 @@ export default function ExerciseLog() {
             </>
           ) : null}
 
+          <View style={styles.card}>
+            <View style={styles.entryHead}>
+              <Text style={styles.cardTitle}>{METRICS.find((m) => m.id === metric)!.title}</Text>
+              <Text style={styles.muted}>{history.length ? `Last ${history.length} session${history.length === 1 ? '' : 's'}` : ''}</Text>
+            </View>
+            <View style={styles.segment}>
+              {METRICS.map((m) => (
+                <Pressable
+                  key={m.id}
+                  onPress={() => setMetric(m.id)}
+                  style={[styles.segItem, metric === m.id && styles.segOn]}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: metric === m.id }}
+                >
+                  <Text style={[styles.segText, metric === m.id && styles.segTextOn]}>{m.label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            {history.length ? (
+              <ProgressChart
+                key={metric}
+                points={series(history, metric).map((pt) => ({ t: pt.t, v: toDisplay(pt.v, profile.units) }))}
+                unit={profile.units}
+                label={METRICS.find((m) => m.id === metric)!.title}
+              />
+            ) : (
+              <Text style={styles.muted}>Finish a workout with this exercise and your trend shows up here.</Text>
+            )}
+            {history.length === 1 ? <Text style={styles.muted}>One more session and you get a trend line.</Text> : null}
+          </View>
+
           {exercise.instructions.length ? (
             <View style={styles.card}>
               <Text style={styles.cardTitle}>How to</Text>
@@ -341,5 +389,10 @@ const styles = StyleSheet.create({
   times: { fontFamily: fonts.displaySemi, fontSize: 20, color: colors.textFaint },
   warmTag: { borderWidth: 1, borderColor: colors.line, borderRadius: radius.chip, paddingHorizontal: 8, paddingVertical: 3 },
   warmTagText: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
+  segment: { flexDirection: 'row', alignSelf: 'flex-start', backgroundColor: colors.raised, borderRadius: radius.chip, padding: 3, gap: 4 },
+  segItem: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.chip },
+  segOn: { backgroundColor: colors.surface },
+  segText: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
+  segTextOn: { color: colors.text },
   step: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, color: colors.textMuted },
 });

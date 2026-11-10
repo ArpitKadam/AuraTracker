@@ -1,5 +1,6 @@
 import type { Db } from '../../recipe-module/db/recipes.ts';
 import type { MuscleGroup } from '../catalog-types.ts';
+import type { SessionSets } from '../progress.ts';
 import type { PastSession } from '../recommend.ts';
 
 /** Finished sessions, newest first, with the exercises logged in each. */
@@ -45,4 +46,25 @@ export async function lastTopSets(db: Db, exerciseIds: string[]): Promise<Map<st
   const out = new Map<string, TopSet>();
   for (const r of rows) if (!out.has(r.exercise_id)) out.set(r.exercise_id, { weightKg: r.weight_kg, reps: r.reps });
   return out;
+}
+
+/** Working sets of one exercise per finished session, oldest first, last `limit` sessions. */
+export async function exerciseSessions(db: Db, exerciseId: string, limit = 12): Promise<SessionSets[]> {
+  const rows = await db.getAllAsync<{ id: number; started_at: number; weight_kg: number; reps: number }>(
+    `SELECT s.id, s.started_at, st.weight_kg, st.reps
+       FROM (SELECT s.id, s.started_at FROM sessions s JOIN session_exercises se ON se.session_id = s.id
+              WHERE se.exercise_id = ? AND s.finished_at IS NOT NULL
+              ORDER BY s.started_at DESC LIMIT ?) s
+       JOIN session_exercises se ON se.session_id = s.id AND se.exercise_id = ?
+       JOIN sets st ON st.session_exercise_id = se.id AND st.is_warmup = 0
+      ORDER BY s.started_at, st.position`,
+    [exerciseId, limit, exerciseId],
+  );
+  const out = new Map<number, SessionSets>();
+  for (const r of rows) {
+    const s = out.get(r.id) ?? { startedAt: r.started_at, sets: [] };
+    s.sets.push({ weightKg: r.weight_kg, reps: r.reps });
+    out.set(r.id, s);
+  }
+  return [...out.values()];
 }
