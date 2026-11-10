@@ -61,4 +61,7 @@ export const DATABASE_VERSION = 1;
 
 export async function migrate(db: MigrateDb) {
   await applyMigrations(db, MIGRATIONS);
+  // Every logged set must survive the app being killed in the background or the phone dying mid-workout:
+  // FULL fsyncs each commit (WAL's default NORMAL can drop the last commits on power loss). Per-connection.
+  await db.execAsync('PRAGMA synchronous = FULL;');
 }

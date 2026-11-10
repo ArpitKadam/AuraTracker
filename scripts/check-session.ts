@@ -59,6 +59,15 @@ const base = await lastSessionSets(db, BENCH);
 assert.deepEqual(base, [{ weightKg: 30, reps: 4 }, { weightKg: 30, reps: 3 }]);
 assert.deepEqual(overloadHint(base, { repMin: 13, weightStepKg: 2.5 }), { kind: 'reps', weightKg: 30, lastReps: 4, from: 5, to: 6 });
 
+// Deleting every set of an open session removes the session (no empty "in progress" banner).
+const s3 = await startSession(db, ['legs'], 7000);
+const only = await addSet(db, s3, 'r:squat', { weightKg: 60, reps: 5, isWarmup: false }, 7100);
+await deleteSet(db, only);
+assert.equal(await getActiveSession(db), null);
+
+// A set survives the connection going away mid-session (process killed): reopen and it is still there.
+assert.equal((raw.prepare('PRAGMA synchronous').get() as { synchronous: number }).synchronous, 2, 'synchronous = FULL');
+
 // An empty session is discarded on finish.
 const empty = await startSession(db, ['back'], 6000);
 assert.equal(await finishSession(db, empty, 6100), null);

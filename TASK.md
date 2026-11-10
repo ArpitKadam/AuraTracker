@@ -59,7 +59,7 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | 4 | Exercise catalog build | done |
 | 5 | Fitness DB + onboarding | done |
 | 6 | Muscle picker + recommendations | done |
-| 7 | Session + set logging + overload hint | done (device check pending) |
+| 7 | Session + set logging + overload hint | done |
 | 8 | Progress graph | todo |
 | 9 | Custom exercises | todo |
 | 10 | Export / import | todo |

@@ -61,8 +61,19 @@ export async function addSet(
   return r.lastInsertRowId;
 }
 
+/** Deletes a set. If that empties the open session, the session goes too, so no empty "in progress" lingers. */
 export async function deleteSet(db: Db, setId: number): Promise<void> {
+  const owner = await db.getFirstAsync<{ session_id: number }>(
+    'SELECT se.session_id FROM sets st JOIN session_exercises se ON se.id = st.session_exercise_id WHERE st.id = ?',
+    [setId],
+  );
   await db.runAsync('DELETE FROM sets WHERE id = ?', [setId]);
+  if (!owner) return;
+  await db.runAsync(
+    `DELETE FROM sessions WHERE id = ? AND finished_at IS NULL
+       AND NOT EXISTS (SELECT 1 FROM session_exercises se JOIN sets st ON st.session_exercise_id = se.id WHERE se.session_id = ?)`,
+    [owner.session_id, owner.session_id],
+  );
 }
 
 export async function setsFor(db: Db, sessionId: number, exerciseId: string): Promise<LoggedSet[]> {

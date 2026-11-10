@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
+import { Storage } from 'expo-sqlite/kv-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +17,20 @@ import { displayStep, formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
 const isGroup = (g: string): g is MuscleGroup => GROUPS.some((x) => x.id === g);
+
+// Typed-but-unlogged entry survives Android killing the app in the background (e.g. while on YouTube).
+// Only reused while a workout is open and within 6 h, so an old draft never overrides the hint.
+type Draft = { weight: string; reps: string; warmup: boolean; at: number };
+const DRAFT_TTL_MS = 6 * 60 * 60 * 1000;
+const draftKey = (id: string) => `fitness.draft.${id}`;
+function readDraft(id: string, now: number): Draft | null {
+  try {
+    const d = JSON.parse(Storage.getItemSync(draftKey(id)) ?? 'null') as Draft | null;
+    return d && now - d.at < DRAFT_TTL_MS ? d : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function ExerciseLog() {
   const insets = useSafeAreaInsets();
@@ -33,6 +48,7 @@ export default function ExerciseLog() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [frame, setFrame] = useState(0);
+  const [loaded, setLoaded] = useState(false);
 
   const reload = useCallback(async () => {
     if (!exercise) return;
@@ -44,20 +60,28 @@ export default function ExerciseLog() {
     if (!exercise) return;
     let live = true;
     (async () => {
-      const [p, base] = await Promise.all([getProfile(db), lastSessionSets(db, exercise.id)]);
+      const [p, base, open] = await Promise.all([getProfile(db), lastSessionSets(db, exercise.id), getActiveSession(db)]);
       const h = overloadHint(base, { repMin: p.repMin, weightStepKg: p.weightStep });
       const start = prefill(h);
       if (!live) return;
       setProfile(p);
       setHint(h);
-      setWeight(start.weightKg === null ? '' : String(toDisplay(start.weightKg, p.units)));
-      setReps(String(start.reps ?? p.repMin));
+      const draft = open ? readDraft(exercise.id, Date.now()) : null;
+      setWeight(draft?.weight ?? (start.weightKg === null ? '' : String(toDisplay(start.weightKg, p.units))));
+      setReps(draft?.reps ?? String(start.reps ?? p.repMin));
+      setWarmup(draft?.warmup ?? false);
+      setLoaded(true);
       await reload();
     })();
     return () => {
       live = false;
     };
   }, [db, exercise, reload]);
+
+  useEffect(() => {
+    if (!exercise || !loaded) return;
+    Storage.setItemSync(draftKey(exercise.id), JSON.stringify({ weight, reps, warmup, at: Date.now() } satisfies Draft));
+  }, [exercise, loaded, weight, reps, warmup]);
 
   // Start/peak illustrations alternate like a slow GIF; still when reduce-motion is on or there's one frame.
   useEffect(() => {
