@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router, useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
@@ -51,7 +52,18 @@ export default function Today() {
       <ScrollView contentContainerStyle={{ gap: space.lg, paddingBottom: space.xl }} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.title}>{'What are we\nworking today?'}</Text>
-          <AppSwitchButton />
+          <View style={styles.headerIcons}>
+            <Pressable
+              onPress={() => router.push('/fitness/settings')}
+              hitSlop={8}
+              style={styles.gear}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Ionicons name="settings-outline" size={20} color={colors.text} />
+            </Pressable>
+            <AppSwitchButton />
+          </View>
         </View>
 
         {active ? (
@@ -123,6 +135,17 @@ const styles = StyleSheet.create({
   resumeText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
   resumeCta: { fontFamily: fonts.semibold, fontSize: 15, color: colors.fitness },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  headerIcons: { flexDirection: 'row', gap: space.sm },
+  gear: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.chip,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   title: { fontFamily: fonts.display, fontSize: 36, lineHeight: 38, color: colors.text },
   map: { backgroundColor: colors.surface, borderRadius: radius.card, paddingVertical: space.lg },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
