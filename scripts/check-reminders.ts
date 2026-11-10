@@ -2,7 +2,7 @@
 // Which reminders get scheduled, and when (TASK.md 10b).
 import assert from 'node:assert/strict';
 
-import { DEFAULT_LAST_MINUTES, formatClock, planReminders, slotMinutes, type ReminderDay } from '../src/fitness/reminders.ts';
+import { DEFAULT_LAST_MINUTES, formatClock, parseLastMinutes, planReminders, slotMinutes, type ReminderDay } from '../src/fitness/reminders.ts';
 
 const plan = { primary: ['chest' as const], secondary: ['triceps' as const, 'abs' as const] };
 const tue = new Date(2026, 10, 10);
@@ -49,5 +49,13 @@ const fresh = planReminders([day({ targets: [] })], DEFAULT_LAST_MINUTES, early)
 assert.equal(fresh.length, 1);
 assert.equal(hhmm(fresh[0].at), '19:00');
 assert.match(fresh[0].body, /13-15/);
+
+// Stored setting: nothing saved yet must mean 19:00, not midnight (Number(null) === 0 bit us on device).
+assert.equal(parseLastMinutes(null), DEFAULT_LAST_MINUTES);
+assert.equal(parseLastMinutes(''), DEFAULT_LAST_MINUTES);
+assert.equal(parseLastMinutes('abc'), DEFAULT_LAST_MINUTES);
+assert.equal(parseLastMinutes('1500'), DEFAULT_LAST_MINUTES);
+assert.equal(parseLastMinutes('1110'), 1110);
+assert.equal(parseLastMinutes('0'), 0, 'an explicit 00:00 is still honoured');
 
 console.log('reminders ok');

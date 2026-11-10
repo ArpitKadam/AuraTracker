@@ -15,7 +15,7 @@ import { loadExercises } from './exercises';
 import { groupLabel } from './groups';
 import { overloadHint } from './overload';
 import { recommend } from './recommend';
-import { DEFAULT_LAST_MINUTES, planReminders, type ReminderDay } from './reminders';
+import { parseLastMinutes, planReminders, type ReminderDay } from './reminders';
 import { dayStatus, groupsOf } from './schedule';
 import { formatWeight } from './units';
 
@@ -27,10 +27,9 @@ const MAX_TARGETS = 4;
 
 // Device-local settings: reminders belong to this phone, not to the exported workout data.
 export function getReminderSettings(): { on: boolean; lastMinutes: number } {
-  const last = Number(Storage.getItemSync(KEY_LAST));
   return {
     on: Storage.getItemSync(KEY_ON) !== '0',
-    lastMinutes: Number.isInteger(last) && last >= 0 && last < 24 * 60 ? last : DEFAULT_LAST_MINUTES,
+    lastMinutes: parseLastMinutes(Storage.getItemSync(KEY_LAST)),
   };
 }
 

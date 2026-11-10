@@ -47,4 +47,11 @@ export function planReminders(days: ReminderDay[], lastMinutes: number, now: Dat
   return out;
 }
 
+/** Stored last-reminder time (minutes after midnight). Missing or invalid -> 19:00. Note Number(null) is 0, so check first. */
+export function parseLastMinutes(raw: string | null): number {
+  if (raw === null || raw.trim() === '') return DEFAULT_LAST_MINUTES;
+  const n = Number(raw);
+  return Number.isInteger(n) && n >= 0 && n < 24 * 60 ? n : DEFAULT_LAST_MINUTES;
+}
+
 export const formatClock = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
