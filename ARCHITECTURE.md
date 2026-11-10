@@ -38,6 +38,18 @@ modules/reel-fetcher MyBites native module (unchanged)
 - Fitness and MyBites share no tables.
 - No assets from third-party commercial apps ship in the build. `GymTracker/`, `Lyfta/` and `reference/` are gitignored.
 
+## Design system
+
+Source of truth: Figma https://www.figma.com/design/0gzT4kJHYZcWtOA2ayEfL3 (variables collection `Aura`, mode `Dark`).
+
+- **Theme:** dark only. Base `#0D0E10`, surface `#16171A`, raised `#1E2024`, hairline `#2A2D33`; text `#ECEDEE` / muted `#8A8F98` / faint `#5C616B`.
+- **Accent per app, locked:** Fitness lime `#C6EE52` (dim `#6E8233`); MyBites blue `#7FA6FF` (dim `#33456B`). Text on an accent is `#0D0E10`.
+- **Type:** Barlow Condensed (numbers, titles) + Geist (UI). No Inter.
+- **Shape:** cards 20px radius; every interactive control is a pill.
+- **Icons:** Ionicons (already shipped via `@expo/vector-icons`), one family.
+- **Body map:** `react-native-body-highlighter` (MIT) paths; selected muscles in accent, assisting muscles in accent-dim.
+- **Charts:** one series per chart, no legend, direct label on the latest point, hairline grid, metric switch (top set / e1RM / volume) instead of a dual axis.
+
 ## Why
 
 - Fork, not sync: MyBites won't ship standalone; one codebase is cheaper.

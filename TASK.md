@@ -28,7 +28,8 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | # | Task | Status |
 |---|------|--------|
 | 1 | Fork + launcher | done |
-| 2 | Reference capture + Figma design | todo |
+| 2 | Reference capture + Figma design | done (awaiting design approval) |
+| 2b | Follow-up: verify yt-dlp download in `src/recipe-module/fetch/reel.ts` (pinned SHA-256 or bundled binary) | todo |
 | 3 | Dark theme across MyBites | todo |
 | 4 | Exercise catalog build | todo |
 | 5 | Fitness DB + onboarding | todo |
@@ -47,6 +48,8 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 ### 2. Reference capture + Figma design
 - REA/ADB screenshots of the relevant Gym Workout + Lyfta flows go to `reference/`. In Figma: dark tokens (variables), launcher, onboarding, muscle picker, recommendations, logging + graph, summary, settings, and dark MyBites screens.
 - **Accept:** user approves the Figma file. **Verify:** Figma screenshots reviewed.
+- **Result:** Figma file https://www.figma.com/design/0gzT4kJHYZcWtOA2ayEfL3 has 8 screens (onboarding, launcher, today picker, recommendations, log + chart, summary, MyBites recipes, settings) plus foundations (variables, Icon/*, Body/Front + Body/Back, Button, Chip, ExerciseRow, SetRow). Reference shots and `reference/NOTES.md` are local only.
+- **Component candidates for porting (bencho.dev, licence not published, confirm before porting):** Rolling counter / Drag stepper (weight & reps), Liquid toggle (warm-up, remember), Jelly tabs (chart metric switch), Slide to confirm (finish workout), Card swap (exercise swap). For 21st.dev, pick per component on its page and check each licence.
 
 ### 3. Dark theme across MyBites
 - Dark `tokens.ts`. Replace the hard-coded hex in the 12 MyBites files with tokens.
