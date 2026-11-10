@@ -16,7 +16,6 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { scheduleOnRN } from 'react-native-worklets';
 
 import { getRecipeCookbookIds } from '@/recipe-module/db/cookbooks';
 import {
@@ -92,16 +91,8 @@ export default function RecipeDetail() {
   }, [recipe, db]);
 
   const scrollY = useSharedValue(0);
-  const overSheet = useSharedValue(false);
-  const [lightBar, setLightBar] = useState(false);
   const onScroll = useAnimatedScrollHandler((e) => {
     scrollY.value = e.contentOffset.y;
-    // Once the sheet reaches the top, the status bar sits on a light header: switch its icons to dark.
-    const past = e.contentOffset.y > HERO_H - 110;
-    if (past !== overSheet.value) {
-      overSheet.value = past;
-      scheduleOnRN(setLightBar, past);
-    }
   });
   const headerStyle = useAnimatedStyle(() => ({
     opacity: interpolate(scrollY.value, [HERO_H - 170, HERO_H - 100], [0, 1], Extrapolation.CLAMP),
@@ -165,27 +156,21 @@ export default function RecipeDetail() {
 
   return (
     <View style={styles.root}>
-      <StatusBar style={lightBar ? 'dark' : 'light'} />
+      <StatusBar style="light" />
       <Animated.View style={[styles.hero, heroStyle]}>
         {r.thumbnailUri ? (
           <Image source={{ uri: r.thumbnailUri }} style={StyleSheet.absoluteFill} contentFit="cover" />
         ) : (
-          <LinearGradient colors={[colors.peach, colors.lavender]} style={[StyleSheet.absoluteFill, styles.center]}>
+          <LinearGradient colors={[colors.raised, colors.surface]} style={[StyleSheet.absoluteFill, styles.center]}>
             <Ionicons name="restaurant-outline" size={64} color={colors.textFaint} />
           </LinearGradient>
         )}
-        <LinearGradient colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0)']} style={styles.scrim} />
+        <LinearGradient colors={[colors.imageScrim, 'transparent']} style={styles.scrim} />
       </Animated.View>
 
       <Animated.ScrollView onScroll={onScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false}>
         <View style={{ height: HERO_H - SHEET_RADIUS }} />
         <View style={[styles.sheet, { minHeight: height - (HERO_H - SHEET_RADIUS), paddingBottom: insets.bottom + 48 }]}>
-          <LinearGradient
-            colors={[colors.peach, colors.base, colors.lavender]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
           <Text style={styles.title}>{r.title}</Text>
 
           <View style={styles.metaRow}>
@@ -195,7 +180,7 @@ export default function RecipeDetail() {
             {r.sourceType === 'instagram' && r.sourceUrl ? (
               <Pressable onPress={() => Linking.openURL(r.sourceUrl!)} accessibilityLabel="Open on Instagram">
                 <View style={styles.igChip}>
-                  <Ionicons name="logo-instagram" size={14} color="#c13584" />
+                  <Ionicons name="logo-instagram" size={14} color={colors.instagram} />
                   <Text style={styles.igText}>Instagram</Text>
                   <Ionicons name="open-outline" size={13} color={colors.textMuted} />
                 </View>
@@ -470,14 +455,14 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   hero: { position: 'absolute', top: 0, left: 0, right: 0, height: HERO_H },
   scrim: { position: 'absolute', top: 0, left: 0, right: 0, height: 130 },
-  header: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: 'rgba(246,243,255,0.97)' },
+  header: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: colors.surface },
   headerTitle: { position: 'absolute', left: 68, right: 68, height: 46, lineHeight: 46, textAlign: 'center', fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
   topBar: { position: 'absolute', left: space.gutter, right: space.gutter, flexDirection: 'row', justifyContent: 'space-between' },
-  topBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.88)' },
+  topBtn: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.raised },
   sheet: { borderTopLeftRadius: SHEET_RADIUS, borderTopRightRadius: SHEET_RADIUS, overflow: 'hidden', paddingHorizontal: space.gutter, paddingTop: space.xl },
   title: { fontFamily: fonts.bold, fontSize: 25, lineHeight: 31, color: colors.text, textAlign: 'center', marginBottom: space.md },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: space.sm, marginBottom: space.lg },
-  igChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, height: 30, borderRadius: 15, borderWidth: 1, borderColor: colors.glassBorder, backgroundColor: 'rgba(255,255,255,0.55)' },
+  igChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 11, height: 30, borderRadius: 15, borderWidth: 1, borderColor: colors.glassBorder, backgroundColor: colors.raised },
   igText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.text },
   actions: { flexDirection: 'row', justifyContent: 'center', gap: space.md, marginBottom: space.xl },
   action: { alignItems: 'center', gap: 6 },
@@ -516,7 +501,7 @@ const styles = StyleSheet.create({
   tileLabel: { fontFamily: fonts.semibold, fontSize: 14, color: colors.accent, marginTop: 4 },
   estimate: { height: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: space.lg },
   estimateText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.accent },
-  estimateError: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b' },
+  estimateError: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger },
   hairline: { height: StyleSheet.hairlineWidth * 2, backgroundColor: colors.glassBorder },
   allergens: { fontFamily: fonts.regular, fontSize: 16, color: colors.textMuted },
   muted: { fontFamily: fonts.regular, fontSize: 15, color: colors.textMuted },

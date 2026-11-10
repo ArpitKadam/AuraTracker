@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts } from '@/theme/tokens';
+import { fonts, printColors as pc } from '@/theme/tokens';
 import type { ShareModel } from '../lib/share';
 
 export const SHARE_CARD_WIDTH = 540;
@@ -14,7 +14,7 @@ export function ShareCard({ model, heroUri, onHeroLoad }: { model: ShareModel; h
   return (
     <View style={styles.card} collapsable={false}>
       <LinearGradient
-        colors={[colors.peach, colors.lavender, colors.mint]}
+        colors={pc.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.top}
@@ -86,29 +86,29 @@ export function ShareCard({ model, heroUri, onHeroLoad }: { model: ShareModel; h
 }
 
 const styles = StyleSheet.create({
-  card: { width: SHARE_CARD_WIDTH, backgroundColor: '#f6f3ff' },
+  card: { width: SHARE_CARD_WIDTH, backgroundColor: pc.page },
   top: { padding: 28, paddingBottom: 24, borderBottomLeftRadius: 36, borderBottomRightRadius: 36 },
-  hero: { width: '100%', height: 250, borderRadius: 24, marginBottom: 18, backgroundColor: 'rgba(120,120,150,0.2)' },
-  title: { fontFamily: fonts.bold, fontSize: 30, lineHeight: 36, color: colors.text, marginBottom: 12 },
+  hero: { width: '100%', height: 250, borderRadius: 24, marginBottom: 18, backgroundColor: pc.photo },
+  title: { fontFamily: fonts.bold, fontSize: 30, lineHeight: 36, color: pc.ink, marginBottom: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     fontFamily: fonts.semibold,
     fontSize: 14,
-    color: colors.text,
-    backgroundColor: 'rgba(255,255,255,0.78)',
+    color: pc.ink,
+    backgroundColor: pc.chip,
     borderRadius: 999,
     overflow: 'hidden',
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   body: { padding: 28, paddingTop: 8 },
-  h2: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1.8, color: colors.accent, marginTop: 26, marginBottom: 8 },
-  h3: { fontFamily: fonts.bold, fontSize: 16, color: colors.accent, marginTop: 16, marginBottom: 2 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(120,120,150,0.22)' },
+  h2: { fontFamily: fonts.bold, fontSize: 13, letterSpacing: 1.8, color: pc.brand, marginTop: 26, marginBottom: 8 },
+  h3: { fontFamily: fonts.bold, fontSize: 16, color: pc.brand, marginTop: 16, marginBottom: 2 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: pc.hairline },
   emoji: { width: 32, fontSize: 24, textAlign: 'center' },
-  text: { flex: 1, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, color: colors.text },
+  text: { flex: 1, fontFamily: fonts.regular, fontSize: 16, lineHeight: 22, color: pc.ink },
   bold: { fontFamily: fonts.bold },
-  note: { color: colors.textMuted },
+  note: { color: pc.inkMuted },
   num: {
     width: 26,
     height: 26,
@@ -118,15 +118,15 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.accent,
-    backgroundColor: colors.accentSoft,
+    color: pc.brand,
+    backgroundColor: pc.brandSoft,
   },
   stepEmoji: { width: 36, fontSize: 26, textAlign: 'center' },
   nut: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  nutTile: { backgroundColor: '#fff', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, minWidth: 96, borderWidth: 1, borderColor: 'rgba(120,120,150,0.25)' },
-  nutValue: { fontFamily: fonts.bold, fontSize: 18, color: colors.text },
-  nutLabel: { fontFamily: fonts.semibold, fontSize: 12, color: colors.accent },
+  nutTile: { backgroundColor: pc.tile, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 10, minWidth: 96, borderWidth: 1, borderColor: pc.border },
+  nutValue: { fontFamily: fonts.bold, fontSize: 18, color: pc.ink },
+  nutLabel: { fontFamily: fonts.semibold, fontSize: 12, color: pc.brand },
   foot: { marginTop: 28, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footText: { fontFamily: fonts.regular, fontSize: 12, color: colors.textMuted, flex: 1 },
-  brand: { fontFamily: fonts.bold, fontStyle: 'italic', fontSize: 18, color: colors.accent },
+  footText: { fontFamily: fonts.regular, fontSize: 12, color: pc.inkMuted, flex: 1 },
+  brand: { fontFamily: fonts.boldItalic, fontSize: 18, color: pc.brand },
 });

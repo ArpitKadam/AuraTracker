@@ -130,7 +130,7 @@ export default function Chat() {
             ) : null}
             {messages.map((m) => (
               <View key={m.id} style={[styles.bubble, m.role === 'user' ? styles.mine : styles.theirs]}>
-                <Rich text={m.content} style={[styles.bubbleText, m.role === 'user' && { color: '#fff' }]} />
+                <Rich text={m.content} style={[styles.bubbleText, m.role === 'user' && { color: colors.onAccent }]} />
               </View>
             ))}
             {sending ? (
@@ -153,11 +153,11 @@ export default function Chat() {
             />
             {sending ? (
               <Pressable onPress={() => abort.current?.abort()} style={styles.send} accessibilityLabel="Stop">
-                <Ionicons name="stop" size={20} color="#fff" />
+                <Ionicons name="stop" size={20} color={colors.onAccent} />
               </Pressable>
             ) : (
               <Pressable onPress={() => send(input)} disabled={!input.trim()} style={[styles.send, !input.trim() && { opacity: 0.4 }]} accessibilityLabel="Send">
-                <Ionicons name="arrow-up" size={22} color="#fff" />
+                <Ionicons name="arrow-up" size={22} color={colors.onAccent} />
               </Pressable>
             )}
           </View>
@@ -169,8 +169,8 @@ export default function Chat() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,22,29,0.38)' },
-  sheet: { marginHorizontal: space.gutter, padding: space.lg, gap: space.sm, height: 560, maxHeight: '88%', backgroundColor: 'rgba(246,243,255,0.97)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
+  sheet: { marginHorizontal: space.gutter, padding: space.lg, gap: space.sm, height: 560, maxHeight: '88%', backgroundColor: colors.surface },
   head: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   title: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
   sub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
@@ -182,10 +182,10 @@ const styles = StyleSheet.create({
   suggestText: { fontFamily: fonts.medium, fontSize: 14, color: colors.accent },
   bubble: { maxWidth: '86%', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20 },
   mine: { alignSelf: 'flex-end', backgroundColor: colors.accent, borderBottomRightRadius: 6 },
-  theirs: { alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: colors.glassBorder, borderBottomLeftRadius: 6 },
+  theirs: { alignSelf: 'flex-start', backgroundColor: colors.raised, borderWidth: 1, borderColor: colors.glassBorder, borderBottomLeftRadius: 6 },
   bubbleText: { fontFamily: fonts.regular, fontSize: 15.5, lineHeight: 22, color: colors.text },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b', paddingHorizontal: 4 },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger, paddingHorizontal: 4 },
   inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: space.sm },
-  input: { flex: 1, minHeight: 46, maxHeight: 110, paddingHorizontal: space.lg, paddingTop: 12, paddingBottom: 12, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
+  input: { flex: 1, minHeight: 46, maxHeight: 110, paddingHorizontal: space.lg, paddingTop: 12, paddingBottom: 12, borderRadius: 24, backgroundColor: colors.raised, borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
   send: { width: 46, height: 46, borderRadius: 23, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
 });

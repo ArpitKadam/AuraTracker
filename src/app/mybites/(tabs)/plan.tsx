@@ -69,7 +69,7 @@ export default function Plan() {
             <Pressable key={d} onPress={() => setDay(d)} style={[styles.day, d === day && styles.dayOn]} accessibilityLabel={monthDay(d)}>
               <Text style={[styles.dayName, d === day && styles.onText]}>{dayName(d)}</Text>
               <Text style={[styles.dayNum, d === day && styles.onText]}>{dayNumber(d)}</Text>
-              <View style={[styles.dot, countOn(d) > 0 && { backgroundColor: d === day ? '#fff' : colors.accent }]} />
+              <View style={[styles.dot, countOn(d) > 0 && { backgroundColor: d === day ? colors.onAccent : colors.accent }]} />
             </Pressable>
           ))}
         </View>
@@ -135,11 +135,11 @@ const styles = StyleSheet.create({
   weekNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   weekLabel: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
   strip: { flexDirection: 'row', gap: 6 },
-  day: { flex: 1, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 1, backgroundColor: 'rgba(255,255,255,0.6)', borderWidth: 1, borderColor: colors.glassBorder },
+  day: { flex: 1, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center', gap: 1, backgroundColor: colors.raised, borderWidth: 1, borderColor: colors.glassBorder },
   dayOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   dayName: { fontFamily: fonts.medium, fontSize: 12, color: colors.textMuted },
   dayNum: { fontFamily: fonts.bold, fontSize: 19, color: colors.text },
-  onText: { color: '#fff' },
+  onText: { color: colors.onAccent },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: 'transparent' },
   list: { paddingHorizontal: space.gutter, paddingTop: space.lg, gap: space.md },
   dayTitle: { fontFamily: fonts.semibold, fontSize: 17, color: colors.textMuted },
@@ -149,6 +149,6 @@ const styles = StyleSheet.create({
   meal: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   mealMain: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: space.md },
   thumb: { width: 52, height: 52, borderRadius: 16 },
-  thumbEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.raised },
   mealTitle: { flex: 1, fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
 });

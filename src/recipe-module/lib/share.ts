@@ -1,6 +1,7 @@
 import type { Recipe } from '../db/recipes.ts';
 import type { NutritionKey } from '../extraction/types.ts';
 import { formatMinutes, formatQuantity, showIngredient, type UnitSystem } from './format.ts';
+import { printColors as pc } from '../../theme/tokens.ts';
 
 export type ShareRow = { emoji: string; amount: string | null; name: string; note: string | null };
 export type ShareModel = {
@@ -104,28 +105,28 @@ export function renderHtml(m: ShareModel, heroDataUri: string | null): string {
 <style>
 @page { margin: 28px 0; }
 * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-body { margin: 0; font-family: sans-serif; color: #16161d; background: #f6f3ff; }
-.top { background: linear-gradient(135deg, #ffe3d1, #e4d2ff 60%, #bdeee6); padding: 20px 36px 20px; border-radius: 0 0 36px 36px; margin-top: -28px; padding-top: 48px; }
+body { margin: 0; font-family: sans-serif; color: ${pc.ink}; background: ${pc.page}; }
+.top { background: linear-gradient(135deg, ${pc.gradient[0]}, ${pc.gradient[1]} 60%, ${pc.gradient[2]}); padding: 20px 36px 20px; border-radius: 0 0 36px 36px; margin-top: -28px; padding-top: 48px; }
 .hero { width: 100%; height: 190px; object-fit: cover; border-radius: 24px; display: block; margin-bottom: 18px; }
 h1 { font-size: 30px; line-height: 1.15; margin: 0 0 12px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { background: rgba(255,255,255,.75); border: 1px solid rgba(120,120,150,.3); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; }
+.chip { background: ${pc.chip}; border: 1px solid ${pc.border}; border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; }
 .body { padding: 4px 36px 12px; }
-h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: #1f5fd6; margin: 18px 0 6px; break-after: avoid; }
-h3 { font-size: 15px; color: #1f5fd6; margin: 16px 0 2px; }
-.ing, .step { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid rgba(120,120,150,.22); break-inside: avoid; }
+h2 { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: ${pc.brand}; margin: 18px 0 6px; break-after: avoid; }
+h3 { font-size: 15px; color: ${pc.brand}; margin: 16px 0 2px; }
+.ing, .step { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid ${pc.hairline}; break-inside: avoid; }
 .ing:first-of-type { border-top: 0; }
 .em { font-size: 22px; width: 30px; text-align: center; flex: none; }
 .tx { flex: 1; font-size: 15px; line-height: 1.4; }
-.tx i { color: #6b6b7a; font-style: normal; }
+.tx i { color: ${pc.inkMuted}; font-style: normal; }
 .step .em { width: 34px; font-size: 24px; }
-.num { flex: none; width: 26px; height: 26px; border-radius: 13px; background: #dbe4ff; color: #1f5fd6; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.num { flex: none; width: 26px; height: 26px; border-radius: 13px; background: ${pc.brandSoft}; color: ${pc.brand}; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; }
 .nut { display: flex; gap: 10px; flex-wrap: wrap; }
-.nut div { background: #fff; border: 1px solid rgba(120,120,150,.25); border-radius: 16px; padding: 10px 16px; min-width: 92px; }
+.nut div { background: ${pc.tile}; border: 1px solid ${pc.border}; border-radius: 16px; padding: 10px 16px; min-width: 92px; }
 .nut b { display: block; font-size: 18px; }
-.nut span { font-size: 12px; color: #1f5fd6; font-weight: 600; }
-.foot { margin-top: 16px; break-inside: avoid; font-size: 12px; color: #6b6b7a; display: flex; justify-content: space-between; gap: 12px; }
-.brand { color: #1f5fd6; font-weight: 800; font-style: italic; }
+.nut span { font-size: 12px; color: ${pc.brand}; font-weight: 600; }
+.foot { margin-top: 16px; break-inside: avoid; font-size: 12px; color: ${pc.inkMuted}; display: flex; justify-content: space-between; gap: 12px; }
+.brand { color: ${pc.brand}; font-weight: 800; font-style: italic; }
 </style></head><body>
 <div class="top">${heroDataUri ? `<img class="hero" src="${e(heroDataUri)}">` : ''}<h1>${e(m.title)}</h1><div class="chips">${m.chips.map((c) => `<span class="chip">${e(c)}</span>`).join('')}${m.tags.slice(0, 3).map((t) => `<span class="chip">🌿 ${e(t)}</span>`).join('')}</div></div>
 <div class="body">

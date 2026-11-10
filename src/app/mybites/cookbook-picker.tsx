@@ -83,7 +83,7 @@ export default function CookbookPicker() {
                     </Text>
                     <Text style={styles.rowCount}>{b.count === 1 ? '1 recipe' : `${b.count} recipes`}</Text>
                   </View>
-                  <View style={[styles.check, on && styles.checkOn]}>{on ? <Ionicons name="checkmark" size={18} color="#fff" /> : null}</View>
+                  <View style={[styles.check, on && styles.checkOn]}>{on ? <Ionicons name="checkmark" size={18} color={colors.onAccent} /> : null}</View>
                 </Pressable>
               );
             })}
@@ -124,8 +124,8 @@ export default function CookbookPicker() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,22,29,0.38)' },
-  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: 'rgba(246,243,255,0.97)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
+  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: colors.surface },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
   done: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent },
@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth * 2, borderTopColor: colors.glassBorder },
   rowName: { fontFamily: fonts.semibold, fontSize: 17, color: colors.text },
   rowCount: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
-  check: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: colors.glassBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.8)' },
+  check: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: colors.glassBorder, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.raised },
   checkOn: { backgroundColor: colors.accent, borderColor: colors.accent },
   newRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 48 },
   newText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.accent },
-  input: { height: 50, paddingHorizontal: space.lg, borderRadius: radius.button, backgroundColor: 'rgba(255,255,255,0.92)', borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b' },
+  input: { height: 50, paddingHorizontal: space.lg, borderRadius: radius.button, backgroundColor: colors.raised, borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 16, color: colors.text },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger },
   primary: { height: 50, borderRadius: radius.button, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: '#fff' },
+  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.onAccent },
 });

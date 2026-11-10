@@ -15,7 +15,8 @@ src/app/
   fitness/...        placeholder now; later onboarding, picker, session, exercise log, settings
 src/launcher.ts      launcher prefs (expo-sqlite/kv-store) + openApp/openLauncher
 src/components/AppSwitchButton.tsx  header icon back to the launcher (MyBites tab headers, Fitness)
-src/theme/           shared tokens (light today; dark in Task 3)
+src/theme/           tokens.ts (dark palette, fonts, printColors), Background, GlassSurface
+src/fitness/split.ts default weekly split (editable in Task 10a)
 src/recipe-module/   MyBites domain code (unchanged except theming)
 src/fitness/         Fitness domain: db, catalog loader, rules (overload, ranking), export
 assets/catalog/      generated catalog.json + exercise media (build output)
@@ -47,6 +48,8 @@ Source of truth: Figma https://www.figma.com/design/0gzT4kJHYZcWtOA2ayEfL3 (vari
 - **Type:** Barlow Condensed (numbers, titles) + Geist (UI). No Inter.
 - **Shape:** cards 20px radius; every interactive control is a pill.
 - **Icons:** Ionicons (already shipped via `@expo/vector-icons`), one family.
+- **Code:** every color lives in `src/theme/tokens.ts`; no raw hex/rgba anywhere else. The exception is `printColors`, which stays light on purpose for the exported share card and PDF.
+- **Launcher data:** reads today's MyBites meal count straight from `mybites.db` (0 on a fresh install), and shows the planned split day for Fitness. No fake numbers.
 - **Body map:** `react-native-body-highlighter` (MIT) paths; selected muscles in accent, assisting muscles in accent-dim.
 - **Charts:** one series per chart, no legend, direct label on the latest point, hairline grid, metric switch (top set / e1RM / volume) instead of a dual axis.
 

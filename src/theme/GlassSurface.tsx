@@ -17,7 +17,7 @@ type Props = {
 
 // Android has no system Liquid Glass. This approximates it: optional blur,
 // translucent fill, a bright top edge and a hairline border.
-export function GlassSurface({ children, radius = 28, blur = false, strong = false, style }: Props) {
+export function GlassSurface({ children, radius = 20, blur = false, strong = false, style }: Props) {
   const target = useBlurTarget();
   return (
     <View style={[styles.shell, { borderRadius: radius }, style]}>
@@ -26,7 +26,7 @@ export function GlassSurface({ children, radius = 28, blur = false, strong = fal
           blurTarget={target}
           blurMethod="dimezisBlurViewSdk31Plus"
           intensity={60}
-          tint="light"
+          tint="dark"
           style={StyleSheet.absoluteFill}
         />
       ) : null}
@@ -36,7 +36,7 @@ export function GlassSurface({ children, radius = 28, blur = false, strong = fal
       />
       <LinearGradient
         pointerEvents="none"
-        colors={['rgba(255,255,255,0.65)', 'rgba(255,255,255,0)']}
+        colors={[colors.glassHighlight, 'transparent']}
         start={{ x: 0.5, y: 0 }}
         end={{ x: 0.5, y: 0.45 }}
         style={StyleSheet.absoluteFill}

@@ -11,7 +11,7 @@ import { formatMinutes } from '../lib/format';
 import { Chip, MacroChip } from './Chip';
 import { PressableScale } from './PressableScale';
 
-const GREEN = '#4f8f2f';
+const GREEN = colors.success;
 
 export function recipeMinutes(r: Recipe): number | null {
   if (r.totalMinutes) return r.totalMinutes;
@@ -24,7 +24,7 @@ const open = (id: number) => router.push({ pathname: '/mybites/recipe/[id]', par
 function SourceBadge({ type }: { type: Recipe['sourceType'] }) {
   return (
     <View style={styles.badge}>
-      <Ionicons name={type === 'instagram' ? 'logo-instagram' : 'image'} size={18} color="#c13584" />
+      <Ionicons name={type === 'instagram' ? 'logo-instagram' : 'image'} size={18} color={colors.instagram} />
     </View>
   );
 }
@@ -103,8 +103,8 @@ export function RecipeCard({ recipe, variant, width, index, onLongPress }: {
 }
 
 const styles = StyleSheet.create({
-  gridPic: { height: 150, backgroundColor: 'rgba(120,120,150,0.14)' },
-  listPic: { width: 112, alignSelf: 'stretch', minHeight: 112, backgroundColor: 'rgba(120,120,150,0.14)' },
+  gridPic: { height: 150, backgroundColor: colors.raised },
+  listPic: { width: 112, alignSelf: 'stretch', minHeight: 112, backgroundColor: colors.raised },
   noPic: { alignItems: 'center', justifyContent: 'center' },
   badge: {
     position: 'absolute',
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: colors.raised,
   },
   body: { padding: space.md, gap: 8 },
   title: { fontFamily: fonts.semibold, fontSize: 16, lineHeight: 21, color: colors.text },

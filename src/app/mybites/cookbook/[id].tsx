@@ -69,7 +69,7 @@ export default function CookbookScreen() {
           <>
             <PressableScale onPress={togglePin} accessibilityLabel={book.pinned ? 'Unpin cookbook' : 'Pin cookbook'}>
               <GlassSurface radius={23} strong style={[styles.round, book.pinned && { backgroundColor: colors.accent }]}>
-                <Ionicons name={book.pinned ? 'pin' : 'pin-outline'} size={20} color={book.pinned ? '#fff' : colors.text} />
+                <Ionicons name={book.pinned ? 'pin' : 'pin-outline'} size={20} color={book.pinned ? colors.onAccent : colors.text} />
               </GlassSurface>
             </PressableScale>
             <PressableScale

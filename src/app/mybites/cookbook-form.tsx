@@ -82,7 +82,7 @@ export default function CookbookForm() {
           </Pressable>
           {editId !== null ? (
             <Pressable onPress={confirmDelete} style={styles.danger} accessibilityRole="button">
-              <Ionicons name="trash-outline" size={18} color="#c0392b" />
+              <Ionicons name="trash-outline" size={18} color={colors.danger} />
               <Text style={styles.dangerText}>Delete cookbook</Text>
             </Pressable>
           ) : null}
@@ -94,25 +94,25 @@ export default function CookbookForm() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,22,29,0.38)' },
-  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: 'rgba(246,243,255,0.97)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
+  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: colors.surface },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
   input: {
     height: 52,
     paddingHorizontal: space.lg,
     borderRadius: radius.button,
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: colors.raised,
     borderWidth: 1,
     borderColor: colors.glassBorder,
     fontFamily: fonts.regular,
     fontSize: 16,
     color: colors.text,
   },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b' },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger },
   primary: { height: 52, borderRadius: radius.button, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: '#fff' },
+  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.onAccent },
   off: { opacity: 0.45 },
   danger: { height: 48, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center' },
-  dangerText: { fontFamily: fonts.semibold, fontSize: 15, color: '#c0392b' },
+  dangerText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.danger },
 });

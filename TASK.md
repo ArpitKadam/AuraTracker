@@ -55,7 +55,7 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | 1 | Fork + launcher | done |
 | 2 | Reference capture + Figma design | done (awaiting design approval) |
 | 2b | Follow-up: verify yt-dlp download in `src/recipe-module/fetch/reel.ts` (pinned SHA-256 or bundled binary) | todo |
-| 3 | Dark theme across MyBites | todo |
+| 3 | Dark theme across MyBites | done |
 | 4 | Exercise catalog build | todo |
 | 5 | Fitness DB + onboarding | todo |
 | 6 | Muscle picker + recommendations | todo |

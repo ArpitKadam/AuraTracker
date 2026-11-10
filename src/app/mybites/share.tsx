@@ -129,9 +129,9 @@ export default function ShareSheet() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,22,29,0.38)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
   offscreen: { position: 'absolute', top: 0, left: -(SHARE_CARD_WIDTH + 200), width: SHARE_CARD_WIDTH },
-  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: 'rgba(246,243,255,0.97)' },
+  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: colors.surface },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: space.xs },
   title: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
   option: {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     gap: space.md,
     padding: space.md,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.8)',
+    backgroundColor: colors.raised,
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
@@ -148,5 +148,5 @@ const styles = StyleSheet.create({
   optionIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentSoft },
   optionTitle: { fontFamily: fonts.semibold, fontSize: 16, color: colors.text },
   optionSub: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b' },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger },
 });

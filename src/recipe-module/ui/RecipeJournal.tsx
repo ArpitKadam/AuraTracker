@@ -90,5 +90,5 @@ const styles = StyleSheet.create({
   tag: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 11, height: 32, borderRadius: radius.chip, backgroundColor: colors.accentSoft },
   tagText: { fontFamily: fonts.medium, fontSize: 13, color: colors.accent },
   tagInput: { minWidth: 70, height: 32, paddingHorizontal: 11, paddingVertical: 0, borderRadius: radius.chip, borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 13, color: colors.text },
-  note: { minHeight: 76, padding: space.md, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.text, textAlignVertical: 'top' },
+  note: { minHeight: 76, padding: space.md, borderRadius: 18, backgroundColor: colors.raised, borderWidth: 1, borderColor: colors.glassBorder, fontFamily: fonts.regular, fontSize: 15, lineHeight: 21, color: colors.text, textAlignVertical: 'top' },
 });

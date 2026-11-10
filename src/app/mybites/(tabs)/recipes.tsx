@@ -182,7 +182,7 @@ export default function Recipes() {
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: space.gutter },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.lg },
-  logo: { flex: 1, fontFamily: fonts.bold, fontStyle: 'italic', fontSize: 30, color: colors.accent },
+  logo: { flex: 1, fontFamily: fonts.boldItalic, fontSize: 30, color: colors.accent },
   round: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
   segments: { flexDirection: 'row', gap: space.sm, marginBottom: space.md },
   segment: { paddingVertical: 10, paddingHorizontal: 18, borderRadius: 18 },

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fonts } from '@/theme/tokens';
+import { colors, fonts, macroColors } from '@/theme/tokens';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -22,7 +22,7 @@ export function Chip({ icon, label, color = colors.textMuted, border = colors.gl
   );
 }
 
-const MACRO = { c: '#e0902b', f: '#8b5cf6', p: '#2f6fe0' } as const;
+const MACRO = macroColors;
 
 /** "C40 F– P40": carbs, fat, protein, each in its own colour. */
 export function MacroChip({ carbs, fat, protein }: { carbs: number | null; fat: number | null; protein: number | null }) {
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     height: 26,
     borderRadius: 13,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    backgroundColor: colors.raised,
   },
   text: { fontFamily: fonts.semibold, fontSize: 12 },
 });

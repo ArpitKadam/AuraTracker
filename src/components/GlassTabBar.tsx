@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
   row: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   pill: { alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 4, borderRadius: 26, overflow: 'hidden', alignSelf: 'stretch' },
-  pillOn: { backgroundColor: 'rgba(160,200,255,0.55)' },
+  pillOn: { backgroundColor: colors.accentSoft },
   label: { fontFamily: fonts.medium, fontSize: 10.5, color: colors.textMuted, marginTop: 2 },
   labelOn: { color: colors.accent, fontFamily: fonts.semibold },
 });

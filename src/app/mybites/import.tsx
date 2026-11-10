@@ -130,7 +130,7 @@ export default function ImportSheet() {
           {state.phase === 'error' ? (
             <>
               <View style={styles.errHead}>
-                <Ionicons name="alert-circle" size={26} color="#c0392b" />
+                <Ionicons name="alert-circle" size={26} color={colors.danger} />
                 <Text style={styles.title}>Could not import</Text>
               </View>
               <Text style={styles.errMsg}>{state.message}</Text>
@@ -173,9 +173,9 @@ function Stage({ label, done }: { label: string; done: boolean }) {
 
 const styles = StyleSheet.create({
   root: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(22,22,29,0.38)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: colors.scrim },
   // No blur behind this sheet (it sits outside the blur target), so an opaque base keeps the page from bleeding through.
-  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: 'rgba(246,243,255,0.97)' },
+  sheet: { marginHorizontal: space.gutter, padding: space.xl, gap: space.md, backgroundColor: colors.surface },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { fontFamily: fonts.bold, fontSize: 22, color: colors.text },
   sub: { fontFamily: fonts.regular, fontSize: 14, color: colors.textMuted, marginBottom: space.xs },
@@ -186,13 +186,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.lg,
     height: 52,
     borderRadius: radius.button,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: colors.raised,
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
   input: { flex: 1, fontFamily: fonts.regular, fontSize: 15, color: colors.text, padding: 0 },
   primary: { height: 52, borderRadius: radius.button, backgroundColor: colors.accent, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: '#fff' },
+  primaryText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.onAccent },
   disabled: { opacity: 0.45 },
   secondary: {
     height: 52,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     gap: space.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.7)',
+    backgroundColor: colors.raised,
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
@@ -215,5 +215,5 @@ const styles = StyleSheet.create({
   hint: { fontFamily: fonts.regular, fontSize: 13, color: colors.textFaint },
   errHead: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   errMsg: { fontFamily: fonts.regular, fontSize: 15, color: colors.text, lineHeight: 21 },
-  error: { fontFamily: fonts.regular, fontSize: 13, color: '#c0392b' },
+  error: { fontFamily: fonts.regular, fontSize: 13, color: colors.danger },
 });

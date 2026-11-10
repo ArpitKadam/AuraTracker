@@ -92,5 +92,5 @@ const styles = StyleSheet.create({
   btn: { paddingVertical: 12, paddingHorizontal: 22, borderRadius: radius.button, backgroundColor: colors.glassFillStrong, borderWidth: 1, borderColor: colors.glassBorder },
   primary: { backgroundColor: colors.accent, borderColor: colors.accent },
   btnText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
-  primaryText: { fontFamily: fonts.semibold, fontSize: 15, color: '#fff' },
+  primaryText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.onAccent },
 });
