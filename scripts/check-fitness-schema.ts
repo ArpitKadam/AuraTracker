@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 
+import { lastTopSets, listPastSessions } from '../src/fitness/db/history.ts';
 import { getProfile, saveProfile, toKg } from '../src/fitness/db/profile.ts';
 import { DATABASE_VERSION, migrate } from '../src/fitness/db/schema.ts';
 
@@ -42,5 +43,27 @@ raw.exec('INSERT INTO sets (session_exercise_id, position, weight_kg, reps, is_w
 assert.throws(() => raw.exec('INSERT INTO sets (session_exercise_id, position, weight_kg, reps, done_at) VALUES (1, 1, 30, 0, 2)'));
 raw.exec('DELETE FROM sessions WHERE id = 1');
 assert.equal((raw.prepare('SELECT COUNT(*) AS n FROM sets').get() as { n: number }).n, 0);
+
+// history: unfinished sessions ignored; last top set = heaviest working set of the latest session, warm-ups excluded
+const sess = (started: number, finished: number | null, groups: string[]) =>
+  Number(raw.prepare('INSERT INTO sessions (started_at, finished_at, groups) VALUES (?,?,?)').run(started, finished, JSON.stringify(groups)).lastInsertRowid);
+const exr = (sid: number, id: string, pos: number) =>
+  Number(raw.prepare('INSERT INTO session_exercises (session_id, exercise_id, position) VALUES (?,?,?)').run(sid, id, pos).lastInsertRowid);
+const set = (seid: number, pos: number, kg: number, reps: number, warm = 0) =>
+  raw.prepare('INSERT INTO sets (session_exercise_id, position, weight_kg, reps, is_warmup, done_at) VALUES (?,?,?,?,?,1)').run(seid, pos, kg, reps, warm);
+const a = sess(100, 200, ['chest']);
+let e = exr(a, 'r:bench-press', 0); set(e, 0, 25, 8); set(e, 1, 27.5, 6);
+const b = sess(300, 400, ['chest', 'triceps']);
+e = exr(b, 'r:bench-press', 0); set(e, 0, 40, 10, 1); set(e, 1, 30, 4); set(e, 2, 30, 5);
+exr(b, 'r:tricep-pushdown', 1);
+const open = sess(500, null, ['back']);
+exr(open, 'r:row', 0);
+const past = await listPastSessions(db);
+assert.deepEqual(past.map((p) => p.startedAt), [300, 100]);
+assert.deepEqual(past[0], { startedAt: 300, groups: ['chest', 'triceps'], exerciseIds: ['r:bench-press', 'r:tricep-pushdown'] });
+const tops = await lastTopSets(db, ['r:bench-press', 'r:tricep-pushdown', 'r:row']);
+assert.deepEqual(tops.get('r:bench-press'), { weightKg: 30, reps: 5 });
+assert.equal(tops.has('r:tricep-pushdown'), false, 'no sets logged, so no top set');
+assert.equal(tops.has('r:row'), false, 'unfinished session ignored');
 
 console.log('fitness schema ok');
