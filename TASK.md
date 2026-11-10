@@ -20,6 +20,31 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 - **Custom exercises:** name, muscle groups, equipment, optional gallery photo.
 - **Design:** Figma-first, original, dark. Fitness and MyBites share a base and differ by accent. Run through design-taste-frontend / high-end-visual-design / minimalist-ui; no AI-slop tropes.
 - **Component sources:** pull multiple components from https://bencho.dev/ and https://21st.dev/. They are web React (Tailwind/Framer Motion), so each one is ported to React Native (Reanimated + react-native-svg). Check each component's license before porting and note its source in a comment.
+- **Workout split (added 2026-11-10), editable in Settings:**
+
+  | Day | Primary | Secondary |
+  |-----|---------|-----------|
+  | Mon | Legs | Shoulder |
+  | Tue | Chest | Triceps, Abs |
+  | Wed | Back | Biceps, Forearms |
+  | Thu | Shoulder | Legs, Abs |
+  | Fri | Biceps, Triceps | Forearms |
+  | Sat | Chest, Back | Abs |
+  | Sun | Rest / make-up day | |
+
+  - Every day's groups can be edited, and the default is the table above.
+  - The split is a plan, not a lock. "What are we working today?" pre-selects today's planned groups, but you can change them freely.
+  - **Skip:** today is marked skipped and nothing moves.
+  - **Postpone:** today's plan moves to the next rest day (Sunday by default), and that day's picker pre-selects it.
+- **"Next time" notifications (added 2026-11-10):**
+  - Local notifications only (no server), sent on days with a planned, not-yet-done workout.
+  - 4 per day, every 4 hours, with the last at 19:00 so it lands before the 19:30–20:30 workout: **07:00, 11:00, 15:00, 19:00**.
+  - Each notification carries one overload target for today's planned groups ("Bench: push for 5–6 at 30 kg", "Rope pushdown: add 2.5 kg"), rotating through the targets.
+  - Notifications stop for the day once a session is started. They don't fire on skipped days. Postponed days fire on the new day.
+  - Settings has an on/off switch and an editable last-notification time; the other three are derived from it at 4-hour intervals.
+- **Honest empty states (added 2026-11-10):**
+  - The launcher MyBites card with no meals planned today reads "What are we eating today?", never a fake count.
+  - The Fitness card with no history reads "What are we working today?" plus today's planned groups.
 - **Docs:** maintain `TASK.md` + `ARCHITECTURE.md` only (no `EXPLANATION.md`).
 - **Git:** the agent commits and pushes itself after each task.
 
@@ -38,6 +63,8 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | 8 | Progress graph | todo |
 | 9 | Custom exercises | todo |
 | 10 | Export / import | todo |
+| 10a | Workout split settings + skip/postpone | todo |
+| 10b | "Next time" local notifications (needs `expo-notifications`) | todo |
 | 11 | Release APK | todo |
 
 ### 1. Fork + launcher
