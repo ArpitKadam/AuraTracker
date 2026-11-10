@@ -2,6 +2,8 @@
 // text is exercised by scripts/check-schema.ts under node:sqlite.
 // Lists (ingredients, steps, tags, allergens) and nutrition are JSON text columns.
 
+import { applyMigrations, type MigrateDb } from '../../lib/migrate.ts';
+
 export const DATABASE_VERSION = 1;
 
 export const MIGRATIONS: Record<number, string> = {
@@ -60,19 +62,6 @@ CREATE INDEX idx_chat_recipe ON chat_messages(recipe_id, id);
 `,
 };
 
-type Db = {
-  execAsync(sql: string): Promise<unknown>;
-  getFirstAsync<T>(sql: string): Promise<T | null>;
-};
-
-export async function migrate(db: Db) {
-  // foreign_keys is per-connection, so it must run on every open, not only on migrate.
-  await db.execAsync('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
-  const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
-  let version = row?.user_version ?? 0;
-  if (version >= DATABASE_VERSION) return;
-  while (version < DATABASE_VERSION) {
-    version += 1;
-    await db.execAsync(`BEGIN;${MIGRATIONS[version]}PRAGMA user_version = ${version};COMMIT;`);
-  }
+export async function migrate(db: MigrateDb) {
+  await applyMigrations(db, MIGRATIONS);
 }

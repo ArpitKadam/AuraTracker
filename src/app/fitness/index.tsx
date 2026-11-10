@@ -1,20 +1,39 @@
 import { Image } from 'expo-image';
+import { Redirect, useFocusEffect } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CATALOG, MEDIA } from '@/assets/catalog';
 import { AppSwitchButton } from '@/components/AppSwitchButton';
+import { getProfile, LB_PER_KG, type Profile } from '@/fitness/db/profile';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
 // Placeholder until Task 5+ (onboarding, muscle picker). Lists the bundled catalog so the build is checkable on device.
 export default function Fitness() {
   const insets = useSafeAreaInsets();
+  const db = useSQLiteContext();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      getProfile(db).then(setProfile);
+    }, [db]),
+  );
+
+  if (!profile) return <View style={styles.root} />;
+  if (!profile.onboarded) return <Redirect href="/fitness/onboarding" />;
+
+  const bw = profile.bodyWeight === null ? null : profile.units === 'kg' ? profile.bodyWeight : profile.bodyWeight * LB_PER_KG;
   return (
     <View style={[styles.root, { paddingTop: insets.top + space.md }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Fitness</Text>
         <AppSwitchButton />
       </View>
+      <Text style={styles.body}>
+        {`${profile.equipment}, ${profile.experience}, ${profile.units}${bw === null ? '' : `, ${bw.toFixed(1)} ${profile.units}`}`}
+      </Text>
       <Text style={styles.body}>{CATALOG.length} exercises in the catalog</Text>
       <FlatList
         data={CATALOG}

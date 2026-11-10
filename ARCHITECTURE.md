@@ -28,7 +28,9 @@ modules/reel-fetcher MyBites native module (unchanged)
 ## Data
 
 - `mybites.db` belongs to MyBites; its schema is untouched.
-- `fitness.db` holds profile, sessions, session_exercises, sets (weight, reps, is_warmup) and custom_exercises.
+- `fitness.db` (`src/fitness/db/schema.ts`, opened by `src/app/fitness/_layout.tsx`): `profile` (single row: units, equipment access, experience, body weight, weight step, rep range 13-15, onboarded), `sessions`, `session_exercises`, `sets` (weight_kg, reps, is_warmup; cascade with session), `custom_exercises`. Weights are always stored in kg; lb is display only.
+- Both DBs migrate through `src/lib/migrate.ts` (PRAGMA user_version, one transaction per step). `scripts/check-schema.ts` and `scripts/check-fitness-schema.ts` run the real migrations under node:sqlite.
+- Fitness routes: `/fitness` redirects to `/fitness/onboarding` until `profile.onboarded`. Onboarding has 4 skippable steps (units, equipment, experience, optional body weight); finishing or skipping the last step saves and marks onboarded.
 - The catalog is read-only bundled JSON. Custom exercises live in the DB, so a rebuilt catalog never clobbers user data.
 - Launcher prefs are `launcher.remember` / `launcher.last` in kv-store. The skip decision is cached in module state, so it is computed once per JS runtime (= once per cold launch). `openLauncher()` clears it, so the switch icon always shows the launcher. Resuming from background keeps the JS runtime, so you land where you were.
 - Deep-link scheme is `auratracker://`, and MyBites import is `auratracker://mybites/import?url=…`.
