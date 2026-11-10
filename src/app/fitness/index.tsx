@@ -7,7 +7,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppSwitchButton } from '@/components/AppSwitchButton';
 import type { MuscleGroup } from '@/fitness/catalog-types';
 import { getProfile, type Profile } from '@/fitness/db/profile';
-import { GROUPS, groupFromName, slugsFor } from '@/fitness/groups';
+import { getActiveSession, setCounts, type ActiveSession } from '@/fitness/db/session';
+import { GROUPS, groupFromName, groupLabel, slugsFor } from '@/fitness/groups';
 import { planFor } from '@/fitness/split';
 import { BodyMap } from '@/fitness/ui/BodyMap';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -25,9 +26,15 @@ export default function Today() {
   const db = useSQLiteContext();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [selected, setSelected] = useState<MuscleGroup[]>(plannedToday);
+  const [active, setActive] = useState<{ session: ActiveSession; sets: number } | null>(null);
   useFocusEffect(
     useCallback(() => {
       getProfile(db).then(setProfile);
+      getActiveSession(db).then(async (a) => {
+        if (!a) return setActive(null);
+        const counts = await setCounts(db, a.id);
+        setActive({ session: a, sets: [...counts.values()].reduce((x, y) => x + y, 0) });
+      });
     }, [db]),
   );
 
@@ -46,6 +53,20 @@ export default function Today() {
           <Text style={styles.title}>{'What are we\nworking today?'}</Text>
           <AppSwitchButton />
         </View>
+
+        {active ? (
+          <Pressable
+            onPress={() => router.push({ pathname: '/fitness/plan', params: { groups: active.session.groups.join(',') } })}
+            style={styles.resume}
+            accessibilityRole="button"
+          >
+            <View style={styles.flex}>
+              <Text style={styles.resumeLabel}>Workout in progress</Text>
+              <Text style={styles.resumeText}>{`${active.session.groups.map(groupLabel).join(' + ')}, ${active.sets} set${active.sets === 1 ? '' : 's'} logged`}</Text>
+            </View>
+            <Text style={styles.resumeCta}>Resume</Text>
+          </Pressable>
+        ) : null}
 
         <View style={styles.map}>
           <BodyMap primary={slugsFor(selected)} scale={0.62} />
@@ -87,6 +108,20 @@ export default function Today() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.base, paddingHorizontal: space.gutter },
+  flex: { flex: 1 },
+  resume: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radius.card,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.fitness,
+  },
+  resumeLabel: { fontFamily: fonts.medium, fontSize: 12, color: colors.fitness },
+  resumeText: { fontFamily: fonts.semibold, fontSize: 15, color: colors.text },
+  resumeCta: { fontFamily: fonts.semibold, fontSize: 15, color: colors.fitness },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   title: { fontFamily: fonts.display, fontSize: 36, lineHeight: 38, color: colors.text },
   map: { backgroundColor: colors.surface, borderRadius: radius.card, paddingVertical: space.lg },

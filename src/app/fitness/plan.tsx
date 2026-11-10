@@ -1,27 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CATALOG, MEDIA } from '@/assets/catalog';
 import type { CatalogExercise, MuscleGroup, MuscleSlug } from '@/fitness/catalog-types';
 import { lastTopSets, listPastSessions, type TopSet } from '@/fitness/db/history';
-import { getProfile, LB_PER_KG, type Profile } from '@/fitness/db/profile';
+import { getProfile, type Profile } from '@/fitness/db/profile';
+import { finishSession, getActiveSession, setCounts } from '@/fitness/db/session';
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { recommend, swapFor, type GroupPicks } from '@/fitness/recommend';
 import { BodyMap } from '@/fitness/ui/BodyMap';
+import { formatWeight } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
 const BY_ID = new Map(CATALOG.map((e) => [e.id, e]));
 const isGroup = (g: string): g is MuscleGroup => GROUPS.some((x) => x.id === g);
-
-function formatWeight(kg: number, profile: Profile) {
-  const v = profile.units === 'kg' ? kg : kg * LB_PER_KG;
-  return `${Math.round(v * 10) / 10} ${profile.units}`;
-}
 
 export default function Plan() {
   const insets = useSafeAreaInsets();
@@ -31,6 +28,25 @@ export default function Plan() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [sections, setSections] = useState<GroupPicks[]>([]);
   const [tops, setTops] = useState<Map<string, TopSet>>(new Map());
+  const [active, setActive] = useState<number | null>(null);
+  const [counts, setCountsState] = useState<Map<string, number>>(new Map());
+
+  // Set counts change while the user logs on the exercise screen; refresh on every return.
+  useFocusEffect(
+    useCallback(() => {
+      let live = true;
+      getActiveSession(db).then(async (a) => {
+        const c = a ? await setCounts(db, a.id) : new Map<string, number>();
+        if (live) {
+          setActive(a?.id ?? null);
+          setCountsState(c);
+        }
+      });
+      return () => {
+        live = false;
+      };
+    }, [db]),
+  );
 
   useEffect(() => {
     let live = true;
@@ -67,6 +83,13 @@ export default function Plan() {
         for (const m of BY_ID.get(p.exerciseId)?.secondary ?? []) if (!primary.includes(m)) count.set(m, (count.get(m) ?? 0) + 1);
     return [...count.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([m]) => m);
   }, [sections, primary]);
+  const loggedTotal = [...counts.values()].reduce((a, b) => a + b, 0);
+  const finish = async () => {
+    if (active === null) return;
+    const id = await finishSession(db, active, Date.now());
+    if (id === null) return router.back();
+    router.replace({ pathname: '/fitness/summary', params: { session: String(id) } });
+  };
   const total = sections.reduce((n, s) => n + s.picks.length, 0);
   const staples = sections.reduce((n, s) => n + s.picks.filter((p) => p.reason === 'staple').length, 0);
 
@@ -117,6 +140,8 @@ export default function Plan() {
                       badge={p.reason === 'staple' ? 'Staple' : p.reason === 'variety' ? 'Try something new' : null}
                       last={tops.get(p.exerciseId)}
                       profile={profile}
+                      logged={counts.get(p.exerciseId) ?? 0}
+                      onOpen={() => router.push({ pathname: '/fitness/exercise/[id]', params: { id: p.exerciseId, groups: groups.join(',') } })}
                       onSwap={() => swap(s.group, i)}
                     />
                   ) : null;
@@ -125,6 +150,12 @@ export default function Plan() {
             ))
           : null}
       </ScrollView>
+
+      {active !== null && loggedTotal > 0 ? (
+        <Pressable onPress={finish} style={({ pressed }) => [styles.finish, { marginBottom: insets.bottom + space.md }, pressed && styles.pressed]} accessibilityRole="button">
+          <Text style={styles.finishText}>{`Finish workout (${loggedTotal} sets)`}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -134,16 +165,20 @@ function ExerciseRow({
   badge,
   last,
   profile,
+  logged,
+  onOpen,
   onSwap,
 }: {
   exercise: CatalogExercise;
   badge: string | null;
   last: TopSet | undefined;
   profile: Profile;
+  logged: number;
+  onOpen: () => void;
   onSwap: () => void;
 }) {
   return (
-    <View style={styles.row}>
+    <Pressable onPress={onOpen} style={({ pressed }) => [styles.row, logged > 0 && styles.rowDone, pressed && styles.pressed]} accessibilityRole="button" accessibilityLabel={`Log ${exercise.name}`}>
       <Image source={MEDIA[exercise.media[0]]} style={styles.thumb} contentFit="cover" />
       <View style={styles.flex}>
         <Text style={styles.name} numberOfLines={2}>
@@ -155,13 +190,21 @@ function ExerciseRow({
               <Text style={styles.badgeText}>{badge}</Text>
             </View>
           ) : null}
-          <Text style={styles.last}>{last ? `Last ${formatWeight(last.weightKg, profile)} × ${last.reps}` : 'Not tried yet'}</Text>
+          {logged > 0 ? (
+            <Text style={styles.done}>{`${logged} set${logged === 1 ? '' : 's'} today`}</Text>
+          ) : (
+            <Text style={styles.last}>{last ? `Last ${formatWeight(last.weightKg, profile.units)} × ${last.reps}` : 'Not tried yet'}</Text>
+          )}
         </View>
       </View>
-      <Pressable onPress={onSwap} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Swap ${exercise.name}`}>
-        <Ionicons name="swap-horizontal" size={22} color={colors.textMuted} />
-      </Pressable>
-    </View>
+      {logged > 0 ? (
+        <Ionicons name="checkmark-circle" size={24} color={colors.fitness} />
+      ) : (
+        <Pressable onPress={onSwap} hitSlop={10} accessibilityRole="button" accessibilityLabel={`Swap ${exercise.name}`}>
+          <Ionicons name="swap-horizontal" size={22} color={colors.textMuted} />
+        </Pressable>
+      )}
+    </Pressable>
   );
 }
 
@@ -200,4 +243,9 @@ const styles = StyleSheet.create({
   badge: { backgroundColor: colors.fitnessSoft, borderRadius: radius.chip, paddingHorizontal: 8, paddingVertical: 2 },
   badgeText: { fontFamily: fonts.medium, fontSize: 12, color: colors.text },
   last: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
+  done: { fontFamily: fonts.medium, fontSize: 13, color: colors.fitness },
+  rowDone: { borderWidth: 1, borderColor: colors.fitnessSoft },
+  pressed: { opacity: 0.85 },
+  finish: { height: 56, borderRadius: radius.button, backgroundColor: colors.fitness, alignItems: 'center', justifyContent: 'center', marginTop: space.sm },
+  finishText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.onAccent },
 });
