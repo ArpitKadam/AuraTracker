@@ -66,7 +66,7 @@ export default function FitnessSettings() {
       file.write(JSON.stringify(data));
       await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Save your AuraTracker backup', UTI: 'public.json' });
       const c = backupCounts(data);
-      setStatus({ ok: true, text: `Exported ${c.sessions} workouts, ${c.sets} sets, ${c.custom} custom exercises` });
+      setStatus({ ok: true, text: `Backup ready: ${c.sessions} workouts, ${c.sets} sets, ${c.custom} custom exercises` });
     } catch (e) {
       setStatus({ ok: false, text: e instanceof Error ? e.message : 'Export failed' });
     } finally {
