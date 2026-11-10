@@ -5,11 +5,13 @@ import { router, useFocusEffect } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { backupCounts, exportData, importData, parseBackup } from '@/fitness/db/backup';
 import { getProfile, saveProfile, toKg, type EquipmentAccess, type Experience, type Profile, type Units } from '@/fitness/db/profile';
+import { ensurePermission, getReminderSettings, rescheduleReminders, setReminderSettings } from '@/fitness/notify';
+import { formatClock, slotMinutes } from '@/fitness/reminders';
 import { formatWeight } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
@@ -41,10 +43,14 @@ export default function FitnessSettings() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reminders, setReminders] = useState(getReminderSettings);
+  const [scheduled, setScheduled] = useState<number | null>(null);
+  const [blocked, setBlocked] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       getProfile(db).then(setProfile);
+      rescheduleReminders(db).then(setScheduled);
     }, [db]),
   );
 
@@ -56,6 +62,19 @@ export default function FitnessSettings() {
     await saveProfile(db, full);
     setProfile(await getProfile(db));
   };
+
+  const changeReminders = async (patch: { on?: boolean; lastMinutes?: number }) => {
+    if (patch.on) {
+      const ok = await ensurePermission();
+      setBlocked(!ok);
+      if (!ok) return;
+    }
+    setReminderSettings(patch);
+    setReminders(getReminderSettings());
+    setScheduled(await rescheduleReminders(db));
+  };
+  // Last reminder between 12:00 and 23:30, in 30-minute steps.
+  const shiftLast = (by: number) => changeReminders({ lastMinutes: Math.min(23 * 60 + 30, Math.max(12 * 60, reminders.lastMinutes + by)) });
 
   const exportNow = async () => {
     setBusy(true);
@@ -99,6 +118,7 @@ export default function FitnessSettings() {
             try {
               await importData(db, backup);
               setProfile(await getProfile(db));
+              setScheduled(await rescheduleReminders(db));
               setStatus({ ok: true, text: `Imported ${c.sessions} workouts and ${c.sets} sets` });
             } catch {
               setStatus({ ok: false, text: 'Import failed. Your previous data is unchanged.' });
@@ -136,6 +156,43 @@ export default function FitnessSettings() {
           <Row label="Weight step" value={formatWeight(profile.weightStep, profile.units)} />
           <Row label="Target reps" value={`${profile.repMin}-${profile.repMax}`} />
           {profile.bodyWeight !== null ? <Row label="Body weight" value={formatWeight(profile.bodyWeight, profile.units)} /> : null}
+        </View>
+
+        <Text style={styles.group}>Reminders</Text>
+        <View style={styles.card}>
+          <View style={styles.rowLine}>
+            <View style={styles.flex}>
+              <Text style={styles.rowLabel}>Next-time targets</Text>
+              <Text style={styles.muted}>On workout days, until you start training</Text>
+            </View>
+            <Switch
+              value={reminders.on}
+              onValueChange={(on) => changeReminders({ on })}
+              accessibilityLabel="Workout reminders"
+              trackColor={{ false: colors.raised, true: colors.fitnessSoft }}
+              thumbColor={reminders.on ? colors.fitness : colors.textMuted}
+            />
+          </View>
+          {reminders.on ? (
+            <>
+              <View style={[styles.rowLine, styles.divider]}>
+                <Text style={styles.rowLabel}>Last reminder</Text>
+                <View style={styles.rowRight}>
+                  <Pressable onPress={() => shiftLast(-30)} hitSlop={8} style={styles.round} accessibilityRole="button" accessibilityLabel="Earlier">
+                    <Ionicons name="remove" size={18} color={colors.text} />
+                  </Pressable>
+                  <Text style={styles.clock}>{formatClock(reminders.lastMinutes)}</Text>
+                  <Pressable onPress={() => shiftLast(30)} hitSlop={8} style={styles.round} accessibilityRole="button" accessibilityLabel="Later">
+                    <Ionicons name="add" size={18} color={colors.text} />
+                  </Pressable>
+                </View>
+              </View>
+              <Text style={styles.note}>
+                {`${slotMinutes(reminders.lastMinutes).map(formatClock).join(', ')}${scheduled === null ? '' : `. ${scheduled} scheduled this week.`}`}
+              </Text>
+            </>
+          ) : null}
+          {blocked ? <Text style={[styles.status, styles.statusBad]}>Notifications are blocked for AuraTracker. Allow them in Android settings.</Text> : null}
         </View>
 
         <Text style={styles.group}>Your data</Text>
@@ -217,6 +274,8 @@ const styles = StyleSheet.create({
   segTextOn: { color: colors.onAccent },
   rowLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14 },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  round: { width: 30, height: 30, borderRadius: radius.chip, backgroundColor: colors.raised, alignItems: 'center', justifyContent: 'center' },
+  clock: { fontFamily: fonts.display, fontSize: 22, color: colors.text, minWidth: 64, textAlign: 'center' },
   rowLabel: { fontFamily: fonts.medium, fontSize: 15, color: colors.text },
   muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
   link: { fontFamily: fonts.medium, fontSize: 14, color: colors.fitness },

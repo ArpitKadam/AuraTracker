@@ -11,6 +11,7 @@ import { getProfile, type Profile } from '@/fitness/db/profile';
 import { getActiveSession, setCounts, type ActiveSession } from '@/fitness/db/session';
 import { getOverrides, getSplit, postponeDay, skipDay, undoDay } from '@/fitness/db/split';
 import { GROUPS, groupLabel, slugsFor } from '@/fitness/groups';
+import { rescheduleReminders } from '@/fitness/notify';
 import { dayStatus, groupsOf, type DayStatus } from '@/fitness/schedule';
 import { BodyMap } from '@/fitness/ui/BodyMap';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -63,6 +64,7 @@ export default function Today() {
     touched.current = false;
     setNote(null);
     await loadStatus();
+    rescheduleReminders(db);
   };
   const postpone = async () => {
     if (status?.kind !== 'planned') return;
@@ -70,11 +72,13 @@ export default function Today() {
     setNote(to ? null : 'No free rest day in the next 2 weeks. Edit your split to add one.');
     touched.current = false;
     await loadStatus();
+    rescheduleReminders(db);
   };
   const undo = async () => {
     await undoDay(db, today);
     touched.current = false;
     await loadStatus();
+    rescheduleReminders(db);
   };
   // Keep display order stable regardless of tap order.
   const ordered = GROUPS.filter((g) => selected.includes(g.id));

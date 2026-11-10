@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { MuscleGroup } from '@/fitness/catalog-types';
 import { getSplit, saveSplitDay } from '@/fitness/db/split';
 import { GROUPS } from '@/fitness/groups';
+import { rescheduleReminders } from '@/fitness/notify';
 import { DEFAULT_SPLIT, isRest, type DayPlan, type Split } from '@/fitness/schedule';
 import { colors, fonts, radius, space } from '@/theme/tokens';
 
@@ -39,11 +40,13 @@ export default function SplitEditor() {
     const next = cycle(split[day], g);
     setSplit(split.map((p, i) => (i === day ? next : p)));
     await saveSplitDay(db, day, next);
+    rescheduleReminders(db);
   };
 
   const reset = async () => {
     for (let d = 0; d < 7; d++) await saveSplitDay(db, d, DEFAULT_SPLIT[d]);
     setSplit(await getSplit(db));
+    rescheduleReminders(db);
   };
 
   return (

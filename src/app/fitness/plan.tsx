@@ -13,6 +13,7 @@ import { finishSession, getActiveSession, setCounts } from '@/fitness/db/session
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { recommend, swapFor, type GroupPicks } from '@/fitness/recommend';
 import { exerciseImage, loadExercises } from '@/fitness/exercises';
+import { rescheduleReminders } from '@/fitness/notify';
 import { BodyMap } from '@/fitness/ui/BodyMap';
 import { formatWeight } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -89,6 +90,7 @@ export default function Plan() {
   const finish = async () => {
     if (active === null) return;
     const id = await finishSession(db, active, Date.now());
+    rescheduleReminders(db); // new history -> new targets for the coming days
     if (id === null) return router.back();
     router.replace({ pathname: '/fitness/summary', params: { session: String(id) } });
   };

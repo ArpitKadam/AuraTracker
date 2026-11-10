@@ -15,6 +15,7 @@ import { GROUPS, groupLabel } from '@/fitness/groups';
 import { overloadHint, prefill, type Hint } from '@/fitness/overload';
 import { series, type Metric, type SessionSets } from '@/fitness/progress';
 import { exerciseImage, loadExercises } from '@/fitness/exercises';
+import { rescheduleReminders } from '@/fitness/notify';
 import { ProgressChart } from '@/fitness/ui/ProgressChart';
 import { displayStep, formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -139,7 +140,10 @@ export default function ExerciseLog() {
     if (!Number.isFinite(r) || r < 1 || r > 200) return setError('Reps must be between 1 and 200');
     setBusy(true);
     try {
+      const wasOpen = await getActiveSession(db);
       const sessionId = await startSession(db, groups.length ? groups : exercise.groups, Date.now());
+      // First set of the day: today's remaining reminders are no longer needed.
+      if (!wasOpen) rescheduleReminders(db);
       await addSet(db, sessionId, exercise.id, { weightKg: toKg(w, profile.units), reps: r, isWarmup: warmup }, Date.now());
       setError(null);
       await reload();
