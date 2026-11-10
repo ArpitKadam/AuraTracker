@@ -65,7 +65,7 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | 10 | Export / import | done |
 | 10a | Workout split settings + skip/postpone | done (device check pending) |
 | 10b | "Next time" local notifications (needs `expo-notifications`) | done |
-| 11 | Release APK | todo |
+| 11 | Release APK | done (signed with private key; installed; user restores data via import) |
 
 ### 1. Fork + launcher
 - Copy `C:\MyBites` into the repo, excluding `node_modules`, `.git`, `.expo`, `android`. Rename the app and package. Move MyBites routes under `src/app/mybites/`. Add `src/app/index.tsx` as the launcher with the remember toggle. Add a placeholder `src/app/fitness/` route. Gitignore `GymTracker/`, `Lyfta/`, `reference/`.
