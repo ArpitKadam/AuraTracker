@@ -62,3 +62,6 @@ modules/*/android/.cxx/
 # exercise datasets: downloaded + generated locally by scripts/build_catalog.py (RepDB licence: no redistribution)
 data/raw/
 assets/catalog/
+
+# local release build log
+.release-build.log
