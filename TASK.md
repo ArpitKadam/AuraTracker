@@ -19,6 +19,9 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 - **Graph per exercise:** top working-set weight and Epley e1RM over time; volume is a toggle.
 - **Custom exercises:** name, muscle groups, equipment, optional gallery photo.
 - **Design:** Figma-first, original, dark. Fitness and MyBites share a base and differ by accent. Run through design-taste-frontend / high-end-visual-design / minimalist-ui; no AI-slop tropes.
+- **Component sources:** pull multiple components from https://bencho.dev/ and https://21st.dev/. They are web React (Tailwind/Framer Motion), so each one is ported to React Native (Reanimated + react-native-svg). Check each component's license before porting and note its source in a comment.
+- **Docs:** maintain `TASK.md` + `ARCHITECTURE.md` only (no `EXPLANATION.md`).
+- **Git:** the agent commits and pushes itself after each task.
 
 ## Tasks
 
