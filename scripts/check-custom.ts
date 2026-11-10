@@ -33,6 +33,9 @@ await assert.rejects(createCustom(db, { name: 'hammer strength PRESS', groups: [
 // It is a normal recommendation candidate for its groups.
 const recs = recommend(['chest'], [ex], [], { equipment: 'gym', experience: 'beginner' });
 assert.deepEqual(recs[0].picks.map((p) => p.exerciseId), [id]);
+// With a full catalog it still makes the cut: the user's own exercises lead the catalog fill.
+const filler = Array.from({ length: 8 }, (_, i) => ({ ...ex, id: `r:x${i}`, name: `X${i}`, mechanic: 'compound' as const, sources: ['repdb' as const], photoUri: null }));
+assert.equal(recommend(['chest'], [...filler, ex], [], { equipment: 'gym', experience: 'beginner' })[0].picks[0].exerciseId, id);
 // ...and is filtered out for a dumbbells-only profile because it needs a machine.
 assert.equal(recommend(['chest'], [ex], [], { equipment: 'dumbbells', experience: 'beginner' })[0].picks.length, 0);
 

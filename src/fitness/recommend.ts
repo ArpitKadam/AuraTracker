@@ -40,7 +40,7 @@ const ISOLATION_FIRST = new Set<MuscleGroup>(['biceps', 'triceps', 'forearms', '
 
 /**
  * Catalog exercises the user can do for this group: main target first (primary[0] is in the group),
- * then the group's lead mechanic (compound for big groups, isolation for arms and abs), then RepDB's
+ * then the user's own exercises (they made them to do them), then the group's lead mechanic (compound for big groups, isolation for arms and abs), then RepDB's
  * curated set before free-exercise-db, then common equipment, then most-illustrated, then name.
  */
 export function candidates(catalog: CatalogExercise[], group: MuscleGroup, prefs: Prefs): CatalogExercise[] {
@@ -58,6 +58,7 @@ export function candidates(catalog: CatalogExercise[], group: MuscleGroup, prefs
     .sort(
       (a, b) =>
         Number(targets(b)) - Number(targets(a)) ||
+        Number(b.sources[0] === 'custom') - Number(a.sources[0] === 'custom') ||
         Number(b.mechanic === lead) - Number(a.mechanic === lead) ||
         Number(b.sources[0] === 'repdb') - Number(a.sources[0] === 'repdb') ||
         EQUIPMENT_RANK[a.equipment] - EQUIPMENT_RANK[b.equipment] ||
