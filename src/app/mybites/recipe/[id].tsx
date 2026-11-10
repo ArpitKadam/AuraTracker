@@ -178,7 +178,10 @@ export default function RecipeDetail() {
               <Chip key={m} icon={m.startsWith('Cook') ? 'flame-outline' : 'time-outline'} label={m} />
             ))}
             {r.sourceType === 'instagram' && r.sourceUrl ? (
-              <Pressable onPress={() => Linking.openURL(r.sourceUrl!)} accessibilityLabel="Open on Instagram">
+              <Pressable
+                onPress={() => r.sourceUrl?.startsWith('https://www.instagram.com/') && Linking.openURL(r.sourceUrl)}
+                accessibilityLabel="Open on Instagram"
+              >
                 <View style={styles.igChip}>
                   <Ionicons name="logo-instagram" size={14} color={colors.instagram} />
                   <Text style={styles.igText}>Instagram</Text>

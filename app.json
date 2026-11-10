@@ -46,7 +46,8 @@
           "icon": "./assets/images/android-icon-monochrome.png",
           "color": "#C6EE52"
         }
-      ]
+      ],
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": true,

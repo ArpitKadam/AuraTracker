@@ -97,6 +97,15 @@ const jsonText = (v: unknown, p: string, shape: 'array' | 'object') => {
   return s;
 };
 const TIME = 4_102_444_800_000;
+// Same anchored pattern as normalizeReelUrl (fetch/reel.ts, not importable here: it pulls native modules).
+// source_url is later passed to Linking.openURL, so only canonical https Instagram links get through.
+const REEL = /^https?:\/\/(?:www\.)?instagram\.com\/(reels?|p|tv)\/([A-Za-z0-9_-]+)\/?$/i;
+function sourceUrl(type: 'instagram' | 'image' | 'manual', v: unknown, p: string): string | null {
+  if (type !== 'instagram') return v === null ? null : fail(p, 'only Instagram recipes have a link');
+  const m = text(v, p, 300).trim().match(REEL);
+  if (!m) return fail(p, 'not an Instagram reel or post link');
+  return `https://www.instagram.com/${m[1].toLowerCase() === 'reels' ? 'reel' : m[1].toLowerCase()}/${m[2]}/`;
+}
 const ID = 2_147_483_647;
 
 export function validateMyBitesBackup(input: unknown): MyBitesBackup {
@@ -125,11 +134,12 @@ export function validateMyBitesBackup(input: unknown): MyBitesBackup {
     recipeIds.add(id);
     const photo = opt(r.photo, (v) => text(v, `${p}.photo`, 100));
     if (photo !== null && !(photo in photos)) fail(`${p}.photo`, 'photo missing from the file');
+    const sourceType = oneOf(r.source_type, `${p}.source_type`, ['instagram', 'image', 'manual'] as const);
     return {
       id,
       title: text(r.title, `${p}.title`, 500),
-      source_type: oneOf(r.source_type, `${p}.source_type`, ['instagram', 'image', 'manual'] as const),
-      source_url: opt(r.source_url, (v) => text(v, `${p}.source_url`, 2000)),
+      source_type: sourceType,
+      source_url: r.source_url === null && sourceType === 'instagram' ? null : sourceUrl(sourceType, r.source_url, `${p}.source_url`),
       photo,
       servings: opt(r.servings, (v) => num(v, `${p}.servings`, 0, 1000)),
       prep_minutes: opt(r.prep_minutes, (v) => int(v, `${p}.prep_minutes`, 0, 100_000)),
