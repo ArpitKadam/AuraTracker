@@ -63,7 +63,7 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 | 8 | Progress graph | done |
 | 9 | Custom exercises | done |
 | 10 | Export / import | done |
-| 10a | Workout split settings + skip/postpone | todo |
+| 10a | Workout split settings + skip/postpone | done (device check pending) |
 | 10b | "Next time" local notifications (needs `expo-notifications`) | todo |
 | 11 | Release APK | todo |
 

@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { groupFromName, slugsFor } from '@/fitness/groups';
-import { planFor } from '@/fitness/split';
+import { groupLabel, slugsFor } from '@/fitness/groups';
+import { DEFAULT_SPLIT, dayStatus, isoDate, type DayStatus, type Override, type Split } from '@/fitness/schedule';
 import { BodyMap } from '@/fitness/ui/BodyMap';
 import { getRemember, openApp, setRemember, startupTarget } from '@/launcher';
 import { toISODate } from '@/recipe-module/lib/dates';
@@ -29,16 +29,38 @@ function mealsToday(): number {
   }
 }
 
+/** Today's split status, read straight from fitness.db; the default split if Fitness was never opened. */
+function todayStatus(now: Date): DayStatus {
+  try {
+    const db = openDatabaseSync('fitness.db');
+    const split: Split = DEFAULT_SPLIT.map((d) => ({ ...d }));
+    for (const r of db.getAllSync<{ day: number; primary_g: string; second_g: string }>('SELECT day, primary_g, second_g FROM split_days', []))
+      split[r.day] = { primary: JSON.parse(r.primary_g), secondary: JSON.parse(r.second_g) };
+    const ov = db.getFirstSync<{ kind: Override['kind']; primary_g: string; second_g: string; other: string | null }>(
+      'SELECT kind, primary_g, second_g, other FROM plan_overrides WHERE date = ?',
+      [isoDate(now)],
+    );
+    const overrides = new Map<string, Override>();
+    if (ov) overrides.set(isoDate(now), { date: isoDate(now), kind: ov.kind, plan: { primary: JSON.parse(ov.primary_g), secondary: JSON.parse(ov.second_g) }, other: ov.other });
+    return dayStatus(now, split, overrides);
+  } catch {
+    return dayStatus(now, DEFAULT_SPLIT, new Map());
+  }
+}
+
+const names = (gs: string[]) => gs.map((g) => groupLabel(g as never)).join(' + ');
+
 export default function Launcher() {
   const insets = useSafeAreaInsets();
   const [remember, setRememberState] = useState(getRemember);
   const [now] = useState(() => new Date());
   const [meals] = useState(mealsToday);
+  const [status] = useState(() => todayStatus(now));
   const target = startupTarget();
 
   if (target) return <Redirect href={target === 'fitness' ? '/fitness' : '/mybites'} />;
 
-  const plan = planFor(now);
+  const plan = status.kind === 'planned' || status.kind === 'moved' ? status.plan : null;
   const toggle = (on: boolean) => {
     setRemember(on);
     setRememberState(on);
@@ -62,17 +84,19 @@ export default function Launcher() {
         {plan ? (
           <View style={styles.map} pointerEvents="none">
             <BodyMap
-              primary={slugsFor(plan.primary.map(groupFromName).filter((g) => g !== null))}
-              secondary={slugsFor(plan.secondary.map(groupFromName).filter((g) => g !== null))}
+              primary={slugsFor(plan.primary)}
+              secondary={slugsFor(plan.secondary)}
               scale={0.42}
             />
           </View>
         ) : null}
         <View>
-          <Text style={styles.label}>{plan ? "Today's plan" : 'Sunday'}</Text>
-          <Text style={styles.plan}>{plan ? plan.primary.join(' + ') : 'Rest or make-up day'}</Text>
+          <Text style={styles.label}>
+            {status.kind === 'moved' ? 'Moved here today' : status.kind === 'skipped' ? 'Skipped today' : status.kind === 'postponed' ? 'Postponed' : plan ? "Today's plan" : 'Rest day'}
+          </Text>
+          <Text style={styles.plan}>{plan ? names(plan.primary) : status.kind === 'rest' ? 'Rest or make-up' : 'Day off'}</Text>
           <Text style={styles.sub}>
-            {plan ? `with ${plan.secondary.join(' & ')}. What are we working today?` : 'What are we working today?'}
+            {plan && plan.secondary.length ? `with ${names(plan.secondary)}. ` : ''}What are we working today?
           </Text>
         </View>
       </Pressable>

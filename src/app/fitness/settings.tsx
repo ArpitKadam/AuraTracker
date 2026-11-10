@@ -126,6 +126,13 @@ export default function FitnessSettings() {
           <Choice label="Units" options={UNITS} value={profile.units} onChange={(units) => update({ units })} />
           <Choice label="Equipment" options={EQUIPMENT} value={profile.equipment} onChange={(equipment) => update({ equipment })} />
           <Choice label="Experience" options={EXPERIENCE} value={profile.experience} onChange={(experience) => update({ experience })} />
+          <Pressable onPress={() => router.push('/fitness/split')} style={[styles.rowLine, styles.divider]} accessibilityRole="button">
+            <Text style={styles.rowLabel}>Workout split</Text>
+            <View style={styles.rowRight}>
+              <Text style={styles.muted}>Edit days</Text>
+              <Ionicons name="chevron-forward" size={18} color={colors.textFaint} />
+            </View>
+          </Pressable>
           <Row label="Weight step" value={formatWeight(profile.weightStep, profile.units)} />
           <Row label="Target reps" value={`${profile.repMin}-${profile.repMax}`} />
           {profile.bodyWeight !== null ? <Row label="Body weight" value={formatWeight(profile.bodyWeight, profile.units)} /> : null}
@@ -209,6 +216,7 @@ const styles = StyleSheet.create({
   segText: { fontFamily: fonts.medium, fontSize: 14, color: colors.textMuted },
   segTextOn: { color: colors.onAccent },
   rowLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14 },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rowLabel: { fontFamily: fonts.medium, fontSize: 15, color: colors.text },
   muted: { fontFamily: fonts.regular, fontSize: 13, color: colors.textMuted },
   link: { fontFamily: fonts.medium, fontSize: 14, color: colors.fitness },

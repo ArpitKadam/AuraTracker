@@ -55,9 +55,33 @@ CREATE TABLE sets (
 );
 CREATE INDEX idx_sets_session_exercise ON sets(session_exercise_id, position);
 `,
+  // Weekly split (seeded with the user's Mon-Sat schedule) and per-date skip/postpone overrides.
+  2: `
+CREATE TABLE split_days (
+  day       INTEGER PRIMARY KEY CHECK (day BETWEEN 0 AND 6),
+  primary_g TEXT    NOT NULL DEFAULT '[]',
+  second_g  TEXT    NOT NULL DEFAULT '[]'
+);
+INSERT INTO split_days (day, primary_g, second_g) VALUES
+  (0, '[]', '[]'),
+  (1, '["legs"]', '["shoulders"]'),
+  (2, '["chest"]', '["triceps","abs"]'),
+  (3, '["back"]', '["biceps","forearms"]'),
+  (4, '["shoulders"]', '["legs","abs"]'),
+  (5, '["biceps","triceps"]', '["forearms"]'),
+  (6, '["chest","back"]', '["abs"]');
+
+CREATE TABLE plan_overrides (
+  date      TEXT PRIMARY KEY NOT NULL CHECK (date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  kind      TEXT NOT NULL CHECK (kind IN ('skip','postponed','moved')),
+  primary_g TEXT NOT NULL DEFAULT '[]',
+  second_g  TEXT NOT NULL DEFAULT '[]',
+  other     TEXT
+);
+`,
 };
 
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 export async function migrate(db: MigrateDb) {
   await applyMigrations(db, MIGRATIONS);

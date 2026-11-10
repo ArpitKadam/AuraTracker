@@ -8,6 +8,7 @@ import { createCustom } from '../src/fitness/db/custom.ts';
 import { saveProfile } from '../src/fitness/db/profile.ts';
 import { migrate } from '../src/fitness/db/schema.ts';
 import { addSet, finishSession, startSession } from '../src/fitness/db/session.ts';
+import { getSplit, saveSplitDay } from '../src/fitness/db/split.ts';
 
 const open = () => {
   const raw = new DatabaseSync(':memory:');
@@ -26,6 +27,7 @@ const open = () => {
 const A = open();
 await migrate(A.db);
 await saveProfile(A.db, { units: 'kg', equipment: 'gym', experience: 'intermediate', bodyWeight: 71, onboarded: true });
+await saveSplitDay(A.db, 0, { primary: ['legs'], secondary: [] }); // a customised Sunday travels with the backup
 const custom = await createCustom(A.db, { name: 'Hammer Press', groups: ['chest', 'triceps'], equipment: 'machine', photoUri: 'file:///p.jpg' }, 5);
 for (const [day, kg] of [[1, 30], [2, 32.5]] as const) {
   const s = await startSession(A.db, ['chest', 'triceps'], day * 1e8);
@@ -51,6 +53,15 @@ await importData(B.db, parseBackup(text));
 const again = await exportData(B.db, 9e8);
 // Photos are files on the phone, not in the JSON: imported custom exercises come back without one.
 assert.deepEqual(again, exported);
+assert.deepEqual((await getSplit(B.db))[0], { primary: ['legs'], secondary: [] });
+// A schema-1 backup (no split) imports fine and leaves the current split alone.
+const v1 = JSON.parse(text);
+delete v1.split;
+v1.schema = 1;
+await saveSplitDay(B.db, 0, { primary: [], secondary: [] });
+await importData(B.db, parseBackup(JSON.stringify(v1)));
+assert.deepEqual((await getSplit(B.db))[0], { primary: [], secondary: [] });
+await importData(B.db, parseBackup(text));
 assert.equal((B.raw.prepare('SELECT photo_uri FROM custom_exercises').get() as { photo_uri: string | null }).photo_uri, null);
 assert.equal((B.raw.prepare("SELECT COUNT(*) AS n FROM custom_exercises WHERE name = 'Old Junk'").get() as { n: number }).n, 0);
 
@@ -71,6 +82,7 @@ const cases: [string, string, RegExp][] = [
   ['sql-ish id', bad((o) => ((o.sessions as any)[0].exercises[0].exerciseId = "r:x'; DROP TABLE sets;--")), /exercise id/],
   ['two open sessions', bad((o) => ((o.sessions as any)[0].finishedAt = null)), /unfinished/],
   ['bad units', bad((o) => ((o.profile as any).units = 'stone')), /units/],
+  ['short split', bad((o) => (o.split as unknown[]).pop()), /7 days/],
   ['duplicate custom', bad((o) => (o.customExercises as unknown[]).push((o.customExercises as unknown[])[0])), /duplicate/],
 ];
 for (const [label, payload, msg] of cases) assert.throws(() => parseBackup(payload), msg, label);

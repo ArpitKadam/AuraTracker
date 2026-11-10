@@ -4,7 +4,9 @@
 import type { Db } from '../../recipe-module/db/recipes.ts';
 import type { Equipment, MuscleGroup } from '../catalog-types.ts';
 import { GROUPS } from '../groups.ts';
+import type { Split } from '../schedule.ts';
 import { DATABASE_VERSION } from './schema.ts';
+import { getSplit, saveSplitDay } from './split.ts';
 
 export const BACKUP_APP = 'auratracker-fitness';
 
@@ -33,6 +35,8 @@ export type Backup = {
   profile: BackupProfile;
   customExercises: BackupCustom[];
   sessions: BackupSession[];
+  /** Weekly split (schema 2+). Older backups have none; importing them keeps the current split. */
+  split?: Split;
 };
 
 type TxDb = Db & { execAsync(sql: string): Promise<unknown> };
@@ -109,6 +113,7 @@ export async function exportData(db: Db, now: number): Promise<Backup> {
       createdAt: c.created_at,
     })),
     sessions: [...sessions.values()],
+    split: await getSplit(db),
   };
 }
 
@@ -207,7 +212,17 @@ export function validateBackup(input: unknown): Backup {
     return { startedAt, finishedAt, groups: groupList(s.groups, `${path}.groups`), exercises };
   });
 
-  return { app: BACKUP_APP, schema, exportedAt: time(root.exportedAt, 'exportedAt'), profile, customExercises, sessions };
+  let split: Split | undefined;
+  if (root.split !== undefined) {
+    const days = arr(root.split, 'split', 7);
+    if (days.length !== 7) fail('split', 'expected 7 days');
+    split = days.map((d0, i) => {
+      const d = obj(d0, `split[${i}]`);
+      return { primary: groupList(d.primary, `split[${i}].primary`), secondary: groupList(d.secondary, `split[${i}].secondary`) };
+    });
+  }
+
+  return { app: BACKUP_APP, schema, exportedAt: time(root.exportedAt, 'exportedAt'), profile, customExercises, sessions, ...(split ? { split } : {}) };
 }
 
 export function parseBackup(text: string): Backup {
@@ -262,6 +277,7 @@ export async function importData(db: TxDb, b: Backup): Promise<void> {
         }
       }
     }
+    if (b.split) for (const [day, plan] of b.split.entries()) await saveSplitDay(db, day, plan);
     await db.execAsync('COMMIT');
   } catch (e) {
     await db.execAsync('ROLLBACK');
