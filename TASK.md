@@ -27,7 +27,7 @@ One Android app, two experiences: **Fitness** (new) and **MyBites** (one-time fo
 
 | # | Task | Status |
 |---|------|--------|
-| 1 | Fork + launcher | todo |
+| 1 | Fork + launcher | done |
 | 2 | Reference capture + Figma design | todo |
 | 3 | Dark theme across MyBites | todo |
 | 4 | Exercise catalog build | todo |
