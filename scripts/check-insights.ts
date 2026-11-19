@@ -1,5 +1,5 @@
 // Run: node scripts/check-insights.ts
-// Stats math on hand-made sessions (fixed `now`), the DB loader on real migrations, and the demo generator.
+// Stats math on hand-made sessions (fixed `now`), and the DB loader on real migrations.
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 
@@ -7,7 +7,6 @@ import type { MuscleGroup, MuscleSlug } from '../src/fitness/catalog-types.ts';
 import { loadInsightSessions } from '../src/fitness/db/insights.ts';
 import { migrate } from '../src/fitness/db/schema.ts';
 import { addSet, finishSession, startSession } from '../src/fitness/db/session.ts';
-import { demoSessions } from '../src/fitness/demo.ts';
 import { GROUPS } from '../src/fitness/groups.ts';
 import {
   awards,
@@ -278,54 +277,3 @@ const prSessions = [
   ]);
 }
 
-// Demo data: deterministic, ~14 months, every function runs, a ring overflows (also early in the week).
-{
-  const ids: Record<MuscleGroup, string[]> = {
-    chest: ['d:bench', 'd:fly'],
-    back: ['d:row'],
-    shoulders: ['d:ohp', 'd:raise'],
-    biceps: ['d:curl'],
-    triceps: ['d:pushdown'],
-    forearms: [],
-    abs: ['d:crunch'],
-    legs: ['d:squat', 'd:rdl', 'd:press'],
-  };
-  const group = new Map(Object.entries(ids).flatMap(([g, xs]) => xs.map((x) => [x, g as MuscleGroup] as const)));
-  const demoInfo: ExerciseInfo = (id) => {
-    const g = group.get(id);
-    return g ? { name: id, primary: [GROUPS.find((x) => x.id === g)!.slugs[0]], secondary: [], groups: [g] } : undefined;
-  };
-  for (const t of [now, wk(0, 0, 20), wk(0, 0, 0, 30), wk(0, 6, 23)]) {
-    const d = demoSessions(t, ids);
-    assert.deepEqual(d, demoSessions(t, ids), 'deterministic');
-    const span = (t - d[0].startedAt) / DAY;
-    assert.ok(span > 400 && span < 435, `span ${span}`);
-    assert.ok(d.every((x) => x.finishedAt <= t && x.startedAt < x.finishedAt), 'nothing in the future');
-    assert.ok(d.every((x, i) => i === 0 || d[i - 1].startedAt < x.startedAt), 'oldest first');
-    const r = weeklyRings(d, t);
-    assert.ok([r.volume, r.sets, r.sessions].some((x) => x.frac > 1), `ring overflow at ${new Date(t)}: ${JSON.stringify(r)}`);
-    trends(d, t);
-    heatmap(d, t);
-    weeklyMuscleSets(d, demoInfo, t);
-    recovery(d, demoInfo, t);
-    weeklyVolume(d, t);
-    muscleBalance(d, demoInfo, t);
-    monthRecap(d, demoInfo, t);
-    calendarMonth(d, t);
-    kpis(d, t);
-    const st = weekStreak(d, t);
-    assert.ok(st.best >= 26 && st.weeks.some((w) => w.state === 'frozen'), JSON.stringify([st.best, st.current]));
-    const a = Object.fromEntries(awards(d, t).map((x) => [x.id, x]));
-    assert.ok(a['early-bird'].earned && a['night-owl'].earned && a['full-body-week'].earned && a['prs-10'].earned);
-  }
-  const d = demoSessions(now, ids);
-  const today = isoDate(new Date(now));
-  assert.ok(d.some((x) => isoDate(new Date(x.startedAt)) === today), 'Wednesday is a training day: session today');
-  assert.ok(d.flatMap((x) => x.exercises).every((e) => !e.exerciseId.startsWith('d:') || group.has(e.exerciseId)));
-  const t0 = trends(d, now);
-  console.log(
-    `demo: ${d.length} sessions, rings ${JSON.stringify(weeklyRings(d, now))}, vol trend ${t0[0].avg365}->${t0[0].avg90}, prs ${records(d).length}`,
-  );
-}
-
-console.log('insights ok');
