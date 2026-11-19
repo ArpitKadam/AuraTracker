@@ -1,5 +1,5 @@
 // Run: node scripts/check-reminders.ts
-// Which reminders get scheduled, and when (TASK.md 10b).
+// Which reminders get scheduled, and when (ARCHITECTURE.md "Reminders").
 import assert from 'node:assert/strict';
 
 import { DEFAULT_LAST_MINUTES, formatClock, parseLastMinutes, planReminders, slotMinutes, type ReminderDay } from '../src/fitness/reminders.ts';

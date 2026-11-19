@@ -1,4 +1,4 @@
-// Progressive-overload hint (TASK.md "Overload rule"). Pure: compares against the last session of the same
+// Progressive-overload hint (ARCHITECTURE.md "Overload hint"). Pure: compares against the last session of the same
 // exercise, working sets only. Rule, with the default 13-15 target range:
 //   - every set at the top weight reached repMin (13+): add one weight step (2.5 kg)
 //   - otherwise: same top weight, aim for the best reps there +1 to +2

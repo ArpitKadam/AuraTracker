@@ -11,7 +11,7 @@ npx expo run:android   # dev build on a connected device
 npx tsc --noEmit && npx expo lint
 ```
 
-Backlog: `TASK.md`. Structure: `ARCHITECTURE.md`.
+Structure: `ARCHITECTURE.md`. Source exercise videos: `exercise-videos.zip` (Git LFS); unzip into `exercises/` before `python scripts/build_catalog.py`.
 
 Exercise data by [RepDB](https://repdb.co). Additional exercises and photos from [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense).
 

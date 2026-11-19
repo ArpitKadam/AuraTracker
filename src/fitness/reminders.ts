@@ -1,4 +1,4 @@
-// "Next time" reminders (TASK.md 10b). Pure: decides which notifications to schedule; notify.ts does the scheduling.
+// "Next time" reminders (ARCHITECTURE.md "Reminders"). Pure: decides which notifications to schedule; notify.ts does the scheduling.
 // Four a day, 4 h apart, the last one before the evening workout (default 19:00 -> 07:00, 11:00, 15:00, 19:00).
 import type { DayStatus } from './schedule.ts';
 

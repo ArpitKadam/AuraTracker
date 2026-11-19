@@ -1,5 +1,5 @@
 // Run: node scripts/check-overload.ts
-// The overload rule from TASK.md, case by case.
+// The overload rule (ARCHITECTURE.md "Overload hint"), case by case.
 import assert from 'node:assert/strict';
 
 import { toKg } from '../src/fitness/db/profile.ts';
