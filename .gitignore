@@ -49,10 +49,12 @@ example
 /ios/
 src/recipe-module/assets/ingredients/
 
-# AuraTracker: third-party APK extracts and reference screenshots, never commit
+# AuraTracker: third-party APK extracts, reference screenshots and demo videos, never commit
 GymTracker/
 Lyfta/
 reference/
+/exercises/
+/exercises.txt
 
 # native module build output
 modules/*/android/build/

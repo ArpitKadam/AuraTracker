@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 
 import type { CatalogExercise } from '../src/fitness/catalog-types.ts';
 import { groupFromName } from '../src/fitness/groups.ts';
-import { PER_GROUP, recommend, swapFor, type PastSession } from '../src/fitness/recommend.ts';
+import { PER_GROUP, recommend, type PastSession } from '../src/fitness/recommend.ts';
 
 const ex = (id: string, o: Partial<CatalogExercise> = {}): CatalogExercise => ({
   id,
@@ -115,14 +115,6 @@ const ids = (g: { picks: { exerciseId: string }[] }) => g.picks.map((p) => p.exe
   // RepDB before free-exercise-db among otherwise equal picks
   const pool = recommend(['chest'], catalog, [], gym)[0];
   assert.ok(!ids(pool).includes('fedb-press') || ids(pool).indexOf('bench') < ids(pool).indexOf('fedb-press'));
-}
-
-// Swap: same group, not already shown, prefers the same primary muscle.
-{
-  const shown = new Set(['bench', 'incline-db', 'fly']);
-  const next = swapFor('bench', 'chest', shown, catalog, gym);
-  assert.ok(next && !shown.has(next));
-  assert.equal(swapFor('bench', 'chest', new Set(catalog.map((e) => e.id)), catalog, gym), null);
 }
 
 // Split names map to picker groups.

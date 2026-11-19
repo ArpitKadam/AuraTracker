@@ -19,9 +19,13 @@ export type CatalogExercise = {
   category: string | null;
   instructions: string[];
   tips: string[];
-  /** File names under assets/catalog/media; first is the start pose, second (if any) the peak. */
+  /** File names under assets/catalog/media: the poster frame of `video`, or empty when there is no video. */
   media: string[];
-  sources: ('repdb' | 'fedb' | 'custom')[];
+  /** Demo clip file name under assets/catalog/videos (key of VIDEOS), or null when none exists yet. */
+  video: string | null;
+  /** Position in the owner's must-have list (scripts/curated.json); null for everything else. */
+  curated: number | null;
+  sources: ('repdb' | 'fedb' | 'custom' | 'curated')[];
   /** Custom exercises only: a photo the user picked, copied into the app's files. */
   photoUri?: string | null;
 };

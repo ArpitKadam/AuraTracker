@@ -1,4 +1,4 @@
-// Rule-based exercise recommendations (TASK.md "Recommendations"). Pure: no DB, no clock.
+// Rule-based exercise ranking. Feeds the reminder targets (staple/history picks) and, via candidates(), the lineup picker's catalog tier. Pure: no DB, no clock.
 import type { CatalogExercise, Equipment, MuscleGroup } from './catalog-types.ts';
 import type { EquipmentAccess, Experience } from './db/profile.ts';
 import { GROUPS } from './groups.ts';
@@ -118,18 +118,4 @@ export function recommend(
     for (const e of pool) add(e.id, 'catalog');
     return { group, picks };
   });
-}
-
-/** Next replacement for a shown exercise: same group, same first primary muscle when possible, not already shown. */
-export function swapFor(
-  exerciseId: string,
-  group: MuscleGroup,
-  shown: Set<string>,
-  catalog: CatalogExercise[],
-  prefs: Prefs,
-): string | null {
-  const current = catalog.find((e) => e.id === exerciseId);
-  const pool = candidates(catalog, group, prefs).filter((e) => !shown.has(e.id));
-  const target = current?.primary[0];
-  return (pool.find((e) => e.primary[0] === target) ?? pool[0])?.id ?? null;
 }

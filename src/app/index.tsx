@@ -86,7 +86,7 @@ export default function Launcher() {
             <BodyMap
               primary={slugsFor(plan.primary)}
               secondary={slugsFor(plan.secondary)}
-              scale={0.42}
+              scale={0.62}
             />
           </View>
         ) : null}
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  map: { position: 'absolute', right: 8, top: 16, opacity: 0.95 },
+  map: { alignSelf: 'center', opacity: 0.95 },
   tagText: { fontFamily: fonts.semibold, fontSize: 13, color: colors.onAccent },
   label: { fontFamily: fonts.medium, fontSize: 13, color: colors.textMuted },
   plan: { fontFamily: fonts.display, fontSize: 44, lineHeight: 46, color: colors.text },

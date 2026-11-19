@@ -1,0 +1,28 @@
+Must-have exercises with no demo video yet. Add exercises/videos/<slug>.mp4, set its "video" in scripts/curated.json, then rerun: python -I scripts/build_catalog.py
+
+Chest: Chest Cable Fly: Low to High
+Chest: Chest Dumbbell Fly: Low to High
+
+Triceps: Cable V-Bar Triceps Press Down
+Triceps: Cable EZ-Bar Triceps Press Down
+Triceps: Single Arm Standing Triceps Overhead Cable Extension
+Triceps: Standing Triceps Overhead Straight Bar Extension
+Triceps: Standing Triceps Overhead V-Bar Extension
+Triceps: Single Arm Cable Pushdown
+
+Biceps: EZ-Bar Biceps Curl
+Biceps: Spider Biceps Curl
+
+Back: Straight Bar Cable Lat Pullover
+Back: Rope Cable Lat Pullover
+Back: Single Arm Cable Pullover
+Back: Reverse Grip Lat Pull-Down
+Back: Mag Grip Lat Pull-Down
+
+Shoulders: Single Arm Bent Lateral Raises
+Shoulders: Plate Front Shoulder Raise
+
+Legs: Smith Machine Squats
+Legs: Romanian Deadlift
+Legs: Standing Calf Raises
+Legs: Walking Lunges

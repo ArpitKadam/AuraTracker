@@ -30,6 +30,8 @@ const toExercise = (r: Row): CatalogExercise => ({
   instructions: [],
   tips: [],
   media: [],
+  video: null,
+  curated: null,
   sources: ['custom'],
   photoUri: r.photo_uri,
 });

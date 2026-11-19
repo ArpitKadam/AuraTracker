@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { Storage } from 'expo-sqlite/kv-store';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { CatalogExercise, MuscleGroup } from '@/fitness/catalog-types';
@@ -14,8 +13,9 @@ import { addSet, deleteSet, getActiveSession, lastSessionSets, setsFor, startSes
 import { GROUPS, groupLabel } from '@/fitness/groups';
 import { overloadHint, prefill, type Hint } from '@/fitness/overload';
 import { series, type Metric, type SessionSets } from '@/fitness/progress';
-import { exerciseImage, loadExercises } from '@/fitness/exercises';
+import { loadExercises } from '@/fitness/exercises';
 import { rescheduleReminders } from '@/fitness/notify';
+import { ExerciseMedia } from '@/fitness/ui/ExerciseMedia';
 import { ProgressChart } from '@/fitness/ui/ProgressChart';
 import { displayStep, formatWeight, toDisplay } from '@/fitness/units';
 import { colors, fonts, radius, space } from '@/theme/tokens';
@@ -63,7 +63,6 @@ export default function ExerciseLog() {
   const [warmup, setWarmup] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [frame, setFrame] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [history, setHistory] = useState<SessionSets[]>([]);
   const [metric, setMetric] = useState<Metric>('top');
@@ -106,16 +105,6 @@ export default function ExerciseLog() {
     if (!exercise || !loaded) return;
     Storage.setItemSync(draftKey(exercise.id), JSON.stringify({ weight, reps, warmup, at: Date.now() } satisfies Draft));
   }, [exercise, loaded, weight, reps, warmup]);
-
-  // Start/peak illustrations alternate like a slow GIF; still when reduce-motion is on or there's one frame.
-  useEffect(() => {
-    if (!exercise || exercise.media.length < 2) return;
-    let timer: ReturnType<typeof setInterval> | undefined;
-    AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
-      if (!reduce) timer = setInterval(() => setFrame((f) => (f + 1) % 2), 900);
-    });
-    return () => clearInterval(timer);
-  }, [exercise]);
 
   if (exercise === undefined) return <View style={styles.root} />;
   if (exercise === null) {
@@ -183,14 +172,7 @@ export default function ExerciseLog() {
         </View>
 
         <ScrollView contentContainerStyle={{ gap: space.md, paddingBottom: insets.bottom + space.xl }} keyboardShouldPersistTaps="handled">
-          {exerciseImage(exercise, frame) ? (
-            <Image
-              source={exerciseImage(exercise, frame)}
-              style={styles.media}
-              contentFit={exercise.photoUri ? 'cover' : 'contain'}
-              accessibilityLabel={`${exercise.name} demonstration`}
-            />
-          ) : null}
+          <ExerciseMedia exercise={exercise} style={styles.media} />
           <View style={styles.tags}>
             {exercise.groups.map((g) => (
               <View key={g} style={styles.tag}>
@@ -371,7 +353,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.base, paddingHorizontal: space.gutter },
   top: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.md },
   title: { flex: 1, fontFamily: fonts.display, fontSize: 26, lineHeight: 28, color: colors.text },
-  media: { width: '100%', height: 220, borderRadius: radius.card, backgroundColor: colors.text },
+  media: { width: '100%', aspectRatio: 16 / 9, borderRadius: radius.card, backgroundColor: colors.base, overflow: 'hidden' },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: { backgroundColor: colors.fitnessSoft, borderRadius: radius.chip, paddingHorizontal: 10, paddingVertical: 5 },
   tagText: { fontFamily: fonts.medium, fontSize: 12, color: colors.text },

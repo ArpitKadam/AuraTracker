@@ -8,7 +8,11 @@ import { migrate } from '../src/fitness/db/schema.ts';
 import {
   addSet,
   bestBefore,
+  addToLineup,
   deleteSet,
+  lineupOf,
+  removeFromLineup,
+  startWorkout,
   finishSession,
   getActiveSession,
   getSession,
@@ -59,11 +63,27 @@ const base = await lastSessionSets(db, BENCH);
 assert.deepEqual(base, [{ weightKg: 30, reps: 4 }, { weightKg: 30, reps: 3 }]);
 assert.deepEqual(overloadHint(base, { repMin: 13, weightStepKg: 2.5 }), { kind: 'reps', weightKg: 30, lastReps: 4, from: 5, to: 6 });
 
-// Deleting every set of an open session removes the session (no empty "in progress" banner).
-const s3 = await startSession(db, ['legs'], 7000);
+// Lineup: start with picks, add mid-workout, drop an unlogged one. Deleting the only set keeps the workout open.
+const s3 = await startWorkout(db, ['legs'], ['r:squat', 'r:leg-press'], 7000);
+await addToLineup(db, s3, ['r:leg-press', 'r:calf-raise']);
 const only = await addSet(db, s3, 'r:squat', { weightKg: 60, reps: 5, isWarmup: false }, 7100);
+assert.deepEqual(await lineupOf(db, s3), [{ exerciseId: 'r:squat', sets: 1 }, { exerciseId: 'r:leg-press', sets: 0 }, { exerciseId: 'r:calf-raise', sets: 0 }]);
+await removeFromLineup(db, s3, 'r:leg-press');
+await removeFromLineup(db, s3, 'r:squat'); // has a set: stays
+assert.deepEqual((await lineupOf(db, s3)).map((x) => x.exerciseId), ['r:squat', 'r:calf-raise']);
 await deleteSet(db, only);
-assert.equal(await getActiveSession(db), null);
+assert.equal((await getActiveSession(db))?.id, s3);
+assert.equal(await finishSession(db, s3, 7200), null, 'a workout with no sets is discarded');
+// An empty lineup left open for over 6 h is replaced, not resumed; one with sets is resumed.
+await startWorkout(db, ['back'], ['r:row'], 8000);
+const next = await startWorkout(db, ['chest'], ['r:bench'], 8000 + 7 * 3600e3);
+assert.deepEqual(await getActiveSession(db), { id: next, startedAt: 8000 + 7 * 3600e3, groups: ['chest'] });
+assert.deepEqual((await lineupOf(db, next)).map((x) => x.exerciseId), ['r:bench']);
+const kept = await addSet(db, next, 'r:bench', { weightKg: 40, reps: 8, isWarmup: false }, 8000 + 7 * 3600e3 + 1);
+assert.equal(await startSession(db, ['legs'], 8000 + 20 * 3600e3), next);
+await deleteSet(db, kept);
+assert.equal(await finishSession(db, next, 8000 + 20 * 3600e3 + 1), null);
+
 
 // A set survives the connection going away mid-session (process killed): reopen and it is still there.
 assert.equal((raw.prepare('PRAGMA synchronous').get() as { synchronous: number }).synchronous, 2, 'synchronous = FULL');

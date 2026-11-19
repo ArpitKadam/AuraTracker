@@ -24,9 +24,22 @@ export async function getActiveSession(db: Db): Promise<ActiveSession | null> {
   return r ? { id: r.id, startedAt: r.started_at, groups: JSON.parse(r.groups) } : null;
 }
 
+const STALE_EMPTY_MS = 6 * 60 * 60 * 1000;
+
 /** Returns the active session, widening its groups if needed, or starts a new one. */
 export async function startSession(db: Db, groups: MuscleGroup[], now: number): Promise<number> {
-  const active = await getActiveSession(db);
+  let active = await getActiveSession(db);
+  // A lineup picked hours ago and never logged is not today's workout: start fresh instead of inheriting its start time.
+  if (active && now - active.startedAt > STALE_EMPTY_MS) {
+    const sets = await db.getFirstAsync<{ n: number }>(
+      'SELECT COUNT(st.id) AS n FROM session_exercises se JOIN sets st ON st.session_exercise_id = se.id WHERE se.session_id = ?',
+      [active.id],
+    );
+    if (!sets?.n) {
+      await db.runAsync('DELETE FROM sessions WHERE id = ?', [active.id]);
+      active = null;
+    }
+  }
   if (active) {
     const merged = [...new Set([...active.groups, ...groups])];
     if (merged.length !== active.groups.length) await db.runAsync('UPDATE sessions SET groups = ? WHERE id = ?', [JSON.stringify(merged), active.id]);
@@ -61,19 +74,40 @@ export async function addSet(
   return r.lastInsertRowId;
 }
 
-/** Deletes a set. If that empties the open session, the session goes too, so no empty "in progress" lingers. */
+/** Deletes a set. The workout stays open (its lineup is still there); Finish discards a workout with no sets. */
 export async function deleteSet(db: Db, setId: number): Promise<void> {
-  const owner = await db.getFirstAsync<{ session_id: number }>(
-    'SELECT se.session_id FROM sets st JOIN session_exercises se ON se.id = st.session_exercise_id WHERE st.id = ?',
-    [setId],
-  );
   await db.runAsync('DELETE FROM sets WHERE id = ?', [setId]);
-  if (!owner) return;
+}
+
+/** Adds exercises to the open session's lineup (today's chosen exercises), keeping pick order. Already-added ones are skipped. */
+export async function addToLineup(db: Db, sessionId: number, exerciseIds: string[]): Promise<void> {
+  for (const id of exerciseIds) await sessionExerciseId(db, sessionId, id);
+}
+
+/** Starts (or resumes) a workout with the chosen exercises. */
+export async function startWorkout(db: Db, groups: MuscleGroup[], exerciseIds: string[], now: number): Promise<number> {
+  const id = await startSession(db, groups, now);
+  await addToLineup(db, id, exerciseIds);
+  return id;
+}
+
+/** Drops an exercise from the lineup, only while it has no sets. */
+export async function removeFromLineup(db: Db, sessionId: number, exerciseId: string): Promise<void> {
   await db.runAsync(
-    `DELETE FROM sessions WHERE id = ? AND finished_at IS NULL
-       AND NOT EXISTS (SELECT 1 FROM session_exercises se JOIN sets st ON st.session_exercise_id = se.id WHERE se.session_id = ?)`,
-    [owner.session_id, owner.session_id],
+    'DELETE FROM session_exercises WHERE session_id = ? AND exercise_id = ? AND id NOT IN (SELECT session_exercise_id FROM sets)',
+    [sessionId, exerciseId],
   );
+}
+
+/** The open session's lineup in pick order, with logged set counts. */
+export async function lineupOf(db: Db, sessionId: number): Promise<{ exerciseId: string; sets: number }[]> {
+  const rows = await db.getAllAsync<{ exercise_id: string; n: number }>(
+    `SELECT se.exercise_id, COUNT(st.id) AS n FROM session_exercises se
+       LEFT JOIN sets st ON st.session_exercise_id = se.id
+      WHERE se.session_id = ? GROUP BY se.id ORDER BY se.position, se.id`,
+    [sessionId],
+  );
+  return rows.map((r) => ({ exerciseId: r.exercise_id, sets: r.n }));
 }
 
 export async function setsFor(db: Db, sessionId: number, exerciseId: string): Promise<LoggedSet[]> {

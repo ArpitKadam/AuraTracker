@@ -7,7 +7,7 @@ import { backupCounts, exportData, importData, parseBackup } from '../src/fitnes
 import { createCustom } from '../src/fitness/db/custom.ts';
 import { saveProfile } from '../src/fitness/db/profile.ts';
 import { migrate } from '../src/fitness/db/schema.ts';
-import { addSet, finishSession, startSession } from '../src/fitness/db/session.ts';
+import { addSet, addToLineup, finishSession, startSession } from '../src/fitness/db/session.ts';
 import { getSplit, saveSplitDay } from '../src/fitness/db/split.ts';
 
 const open = () => {
@@ -38,6 +38,8 @@ for (const [day, kg] of [[1, 30], [2, 32.5]] as const) {
 }
 const live = await startSession(A.db, ['back'], 3e8);
 await addSet(A.db, live, 'f:Pullups', { weightKg: 0, reps: 8, isWarmup: false }, 3e8 + 1);
+// The open workout's lineup (picked, not yet logged; curated and video-only ids) travels too.
+await addToLineup(A.db, live, ['a:mag-grip-lat-pull-down', 'v:band-high-row']);
 
 const exported = await exportData(A.db, 9e8);
 const text = JSON.stringify(exported);

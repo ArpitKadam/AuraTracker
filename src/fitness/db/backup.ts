@@ -139,7 +139,7 @@ const str = (v: unknown, path: string, max: number) => (typeof v === 'string' &&
 const groupList = (v: unknown, path: string) => arr(v, path, GROUPS.length).map((g, i) => (GROUP_IDS.has(g as string) ? (g as MuscleGroup) : fail(`${path}[${i}]`, 'unknown muscle group')));
 const slugList = (v: unknown, path: string) => arr(v, path, 20).map((s, i) => (SLUGS.has(s as string) ? (s as string) : fail(`${path}[${i}]`, 'unknown muscle')));
 const exerciseId = (v: unknown, path: string) =>
-  typeof v === 'string' && /^[rfc]:[A-Za-z0-9_.'()-]{1,120}$/.test(v) ? v : fail(path, 'bad exercise id');
+  typeof v === 'string' && /^[rfcav]:[A-Za-z0-9_.'()-]{1,120}$/.test(v) ? v : fail(path, 'bad exercise id');
 
 export function validateBackup(input: unknown): Backup {
   const root = obj(input, 'file');

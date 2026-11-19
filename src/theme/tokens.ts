@@ -29,6 +29,28 @@ export const colors = {
 // Macro identity colors (carbs / fat / protein), checked against the dark surface.
 export const macroColors = { c: '#F0A54A', f: '#B39BFF', p: '#5CB8FF' } as const;
 
+// Fitness stats screen (/fitness/stats). Rings are [start, end] of an angular gradient; tracks are the
+// same hue at ~22% opacity. Heat steps mix the fitness lime into `raised` at 0/30/55/78/100%.
+export const insightColors = {
+  ringVolume: ['#FA114F', '#FF4D7D'],
+  ringVolumeTrack: 'rgba(250,17,79,0.22)',
+  ringSets: ['#9BD62A', '#D9FF6E'],
+  ringSetsTrack: 'rgba(198,238,82,0.22)',
+  ringSessions: ['#00E5FF', '#5CF2FF'],
+  ringSessionsTrack: 'rgba(0,229,255,0.22)',
+  ringCapShadow: 'rgba(0,0,0,0.5)',
+  heat: ['#1E2024', '#505E32', '#7A913D', '#A1C148', '#C6EE52'],
+  fitnessWash: 'rgba(198,238,82,0.12)',
+  fitnessBand: 'rgba(198,238,82,0.18)',
+  above: '#FF9F43',
+  flame: '#FF8A3D',
+  freeze: '#7FD8FF',
+  readySoft: '#3D6B49',
+  medal: ['#F2FFB8', '#C6EE52', '#6E8233'],
+  // SVG mask luminance: pure white = fully revealed.
+  maskOn: '#FFFFFF',
+} as const;
+
 // The share card and PDF are exported artifacts meant for other people and print,
 // so they keep a light palette on purpose.
 export const printColors = {

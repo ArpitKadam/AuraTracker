@@ -47,7 +47,8 @@
           "color": "#C6EE52"
         }
       ],
-      "./plugins/withReleaseSigning"
+      "./plugins/withReleaseSigning",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true,

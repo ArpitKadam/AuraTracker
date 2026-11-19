@@ -82,7 +82,7 @@ export default function Today() {
   };
   // Keep display order stable regardless of tap order.
   const ordered = GROUPS.filter((g) => selected.includes(g.id));
-  const cta = ordered.length ? `Build ${ordered.map((g) => g.label.toLowerCase()).join(' + ')}` : 'Pick at least one group';
+  const cta = ordered.length ? 'Pick exercises' : 'Pick at least one group';
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + space.lg }]}>
@@ -90,6 +90,15 @@ export default function Today() {
         <View style={styles.header}>
           <Text style={styles.title}>{'What are we\nworking today?'}</Text>
           <View style={styles.headerIcons}>
+            <Pressable
+              onPress={() => router.push('/fitness/stats')}
+              hitSlop={8}
+              style={styles.gear}
+              accessibilityRole="button"
+              accessibilityLabel="Your numbers"
+            >
+              <Ionicons name="stats-chart" size={19} color={colors.fitness} />
+            </Pressable>
             <Pressable
               onPress={() => router.push('/fitness/settings')}
               hitSlop={8}
@@ -105,7 +114,7 @@ export default function Today() {
 
         {active ? (
           <Pressable
-            onPress={() => router.push({ pathname: '/fitness/plan', params: { groups: active.session.groups.join(',') } })}
+            onPress={() => router.push('/fitness/workout')}
             style={styles.resume}
             accessibilityRole="button"
           >
