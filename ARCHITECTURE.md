@@ -79,8 +79,9 @@ Source of truth: Figma https://www.figma.com/design/0gzT4kJHYZcWtOA2ayEfL3 (vari
 ## Why
 
 - Fork, not sync: MyBites won't ship standalone; one codebase is cheaper.
-- Bundled catalog: works offline in the gym. 1,543 exercises (RepDB + free-exercise-db ids kept so history stays linked, 40 new must-have `a:` and 86 video-only `v:` entries). Demos are the user's 312 clips re-encoded to 640px H.264, no audio (~14 MB) with a webp poster each; RepDB/fedb images are no longer shipped, so exercises without a clip show a placeholder.
-- Source clips are not ours to publish (public repo), so `exercises/` stays gitignored like the RepDB data.
+- Bundled catalog: works offline in the gym. 1,544 exercises (RepDB + free-exercise-db ids kept so history stays linked, 40 new must-have `a:` and 87 video-only `v:` entries). Demos are the user's own 312 clips re-encoded to 640px H.264, no audio (~14 MB) with a webp poster each; RepDB/fedb images are no longer shipped, so exercises without a clip show a placeholder.
+- A clip can back more than one exercise (a must-have name and its catalog twin, e.g. Romanian Deadlift and Stiff-Legged Barbell Deadlift); `curated.json` picks the must-have's clip, `ALIAS` keeps it on the twin.
+- Source clips (`exercises/`) are the user's own work; they stay out of git only to keep the repo small. The APK carries the transcoded copies.
 - Catalog is built locally, never committed: the repo is public and RepDB's free tier forbids redistributing the dataset. A fresh clone must run `scripts/build_catalog.py` before `tsc` or Metro (the app imports `@/assets/catalog`).
 - ExerciseDB is not in the catalog: the Kaggle "open source" set is a 30-exercise sample behind a Kaggle login, and the 1,500-exercise repo it links to is AGPL with no data.
 - Equipment comes from the icons on RepDB's exercise pages (name heuristics only as fallback). Near-duplicates are collapsed by a normalised name key ("barbell" and "medium grip" are implied).
